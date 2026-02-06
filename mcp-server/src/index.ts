@@ -877,7 +877,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
         case '>oo_help': {
           const helpText = `📚 opencode-obsidian - Comandos Disponibles
 
-Comandos:
+Comandos Disponibles:
   >oo help            Muestra esta ayuda
   >oo cap <texto>     Capture - Capturar nota
   >oo cap -f <file>   Capture desde archivo
@@ -887,23 +887,31 @@ Comandos:
   >oo daily           Daily - Resumen del día
   >oo tpl             Templates - Listar templates
   >oo idx             Index - Indexar vault
-  >oo ask <pregunta>  Ask - Preguntar al vault
+  >oo ask <pregunta>  Ask - Preguntar al vault (RAG)
   >oo deploy <tags>   Deploy - Registrar deploy tags
   >oo deploys         Deploys - Listar deploy tags
 
 Ejemplos:
-  >oo cap "Tengo que revisar bug 28416"
-  >oo cap -f meeting_notes.txt
-  >oo find "error 403"
-  >oo task 28416
-  >oo task 28416 status "🟢 PROD"
-  >oo read "tracking/28416.md"
-  >oo tpl
-  >oo ask "cómo solucioné el error del OTP"
-  >oo daily
-  >oo idx
-  >oo deploy "git tag -a v2.8.3 -m '28416 fix OTP validation'"
-  >oo deploys`;
+  >oo help                                    # Mostrar esta ayuda
+  >oo cap "Tengo que revisar bug 28416"       # Capturar nota con Azure ID
+  >oo cap -f meeting_notes.txt                # Capturar desde archivo
+  >oo find "error 403"                       # Buscar en vault
+  >oo read "tracking/28416.md"               # Leer nota específica
+  >oo task 28416                              # Ver estado tarea
+  >oo task 28416 status "🟢 PROD"              # Actualizar tarea
+  >oo daily                                   # Resumen de ayer
+  >oo tpl                                     # Listar templates
+  >oo idx                                     # Indexar vault (primera vez)
+  >oo ask "cómo solucioné el error del OTP"    # Preguntar al vault con IA
+  >oo deploy "git tag -a v2.8.3 -m '28416 fix'" # Registrar deploy
+  >oo deploys                                 # Listar deploys realizados
+
+💡 Tips:
+- Usa Azure IDs (28xxx) para generar trackers automáticamente
+- El sistema detecta git tags y valida Azure IDs
+- Indexa con >oo idx antes de usar >oo ask
+- Las notas se organizan automáticamente en carpetas`;
+
           return {
             content: [{ type: 'text', text: helpText }]
           };
@@ -988,7 +996,7 @@ Ejemplos:
           const isValid = await vaultSearch!.isIndexValid();
           if (!isValid) {
             return {
-              content: [{ type: 'text', text: '⚠️ El índice no existe o está desactualizado. Ejecuta `>oo_idx` primero.' }]
+              content: [{ type: 'text', text: '⚠️ El índice no existe o está desactualizado. Ejecuta `>oo idx` primero.' }]
             };
           }
           
@@ -998,7 +1006,7 @@ Ejemplos:
           
           if (results.length === 0) {
             return {
-              content: [{ type: 'text', text: '❌ No encontré información relevante en tu vault.' }]
+              content: [{ type: 'text', text: '❌ No encontré información relevante en tu vault.\n💡 Intenta usar términos más específicos o ejecuta `>oo idx` para indexar más notas.' }]
             };
           }
           
@@ -1007,6 +1015,8 @@ Ejemplos:
             response += `${i + 1}. **${r.path}** (relevancia: ${(r.score * 100).toFixed(1)}%)\n`;
             response += `${r.content.substring(0, 200)}...\n\n`;
           });
+          
+          response += `---\n📊 ${results.length} resultados mostrados de tu vault. Usa "limit:10" para más resultados.`;
           
           return {
             content: [{ type: 'text', text: response }]

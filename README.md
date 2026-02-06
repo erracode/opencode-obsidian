@@ -40,24 +40,29 @@ Cierra y vuelve a abrir opencode.
 
 ---
 
-## 🎮 Uso Rápido
-
-### Comandos (>oo)
+### Comandos Disponibles (>oo)
 
 | Comando | Descripción | Ejemplo |
 |---------|-------------|---------|
-| `>oo help` | Mostrar comandos disponibles | `>oo help` |
+| `>oo help` | Mostrar ayuda completa con ejemplos | `>oo help` |
 | `>oo cap` | Capture - Capturar nota | `>oo cap "Tengo que revisar bug 28416"` |
 | `>oo cap -f` | Capture desde archivo | `>oo cap -f meeting_notes.txt` |
 | `>oo find` | Find - Buscar en vault | `>oo find "error 403"` |
-| `>oo read` | Read - Leer nota | `>oo read "tracking/28416.md"` |
-| `>oo task` | Task - Ver/actualizar tarea | `>oo task 28416` o `>oo task 28416 status "PROD"` |
+| `>oo read` | Read - Leer nota específica | `>oo read "tracking/28416.md"` |
+| `>oo task` | Task - Ver/actualizar tarea | `>oo task 28416` |
+| `>oo task` | Task - Actualizar estado y tag | `>oo task 28416 status "🟢 PROD" tag v2.8.3` |
 | `>oo daily` | Daily - Resumen del día | `>oo daily` |
 | `>oo tpl` | Templates - Listar templates | `>oo tpl` |
-| `>oo idx` | Index - Indexar vault | `>oo idx` |
-| `>oo ask` | Ask - Preguntar al vault | `>oo ask "cómo solucioné el error"` |
-| `>oo deploy` | Deploy - Registrar tags | `>oo deploy "git tag -a v2.8 -m '28416 fix'"` |
-| `>oo deploys` | Deploys - Listar deploys | `>oo deploys` |
+| `>oo idx` | Index - Indexar vault para RAG | `>oo idx` |
+| `>oo ask` | Ask - Preguntar al vault con IA | `>oo ask "cómo solucioné el error"` |
+| `>oo deploy` | Deploy - Registrar deploy tags | `>oo deploy "git tag -a v2.8.3 -m '28416 fix'"` |
+| `>oo deploys` | Deploys - Listar deploys realizados | `>oo deploys` |
+
+**💡 Tips de Producción:**
+- Usa Azure IDs (28xxx) para generar trackers automáticamente
+- El sistema detecta git tags y valida Azure IDs obligatoriamente
+- Indexa con `>oo idx` antes de usar `>oo ask` para mejor RAG
+- Las notas se organizan automáticamente en carpetas según el contenido
 
 ### Flujo de Trabajo Típico
 
