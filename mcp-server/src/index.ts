@@ -674,10 +674,23 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
             required: ['note_path']
           }
         },
-        // COMANDOS CORTOS
+        // COMANDOS CORTOS (con prefijo -)
         {
-          name: '/capture',
-          description: 'Quick capture shortcut - same as obsidian_capture_note',
+          name: '-?',
+          description: 'Show help - list all available commands',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              _: { 
+                type: 'string', 
+                description: 'Ignored - just type -?' 
+              }
+            }
+          }
+        },
+        {
+          name: '-c',
+          description: 'C)apture - Quick capture shortcut (same as obsidian_capture_note)',
           inputSchema: {
             type: 'object',
             properties: {
@@ -688,20 +701,20 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: '/deploy',
-          description: 'Quick deploy registration - validates Azure ID in tags',
+          name: '-f',
+          description: 'F)ind - Quick vault search (same as obsidian_search_vault)',
           inputSchema: {
             type: 'object',
             properties: {
-              tags: { type: 'string', description: 'Git tags to register (paste git tag commands)' },
+              query: { type: 'string', description: 'Search query' },
               vault_path: { type: 'string', description: 'Optional vault path override' }
             },
-            required: ['tags']
+            required: ['query']
           }
         },
         {
-          name: '/track',
-          description: 'Quick tracker view/update for Azure task',
+          name: '-t',
+          description: 'T)ask - Quick tracker view/update for Azure task (same as obsidian_update_task_progress)',
           inputSchema: {
             type: 'object',
             properties: {
@@ -714,48 +727,46 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: '/daily',
-          description: 'Quick daily summary - same as obsidian_get_daily_summary',
+          name: '-d',
+          description: 'D)aily - Quick daily summary (same as obsidian_get_daily_summary)',
           inputSchema: {
             type: 'object',
             properties: {
+              date: { type: 'string', description: 'Optional: Specific date (YYYY-MM-DD)' },
               vault_path: { type: 'string', description: 'Optional vault path override' }
             }
           }
         },
         {
-          name: '/search',
-          description: 'Quick vault search - same as obsidian_search_vault',
+          name: '-tpl',
+          description: 'TePLates - Quick list templates (same as obsidian_list_templates)',
           inputSchema: {
             type: 'object',
             properties: {
-              query: { type: 'string', description: 'Search query' },
-              vault_path: { type: 'string', description: 'Optional vault path override' }
-            },
-            required: ['query']
+              _: { 
+                type: 'string', 
+                description: 'Ignored - just type -tpl' 
+              }
+            }
           }
         },
         {
-          name: '/templates',
-          description: 'Quick list templates - same as obsidian_list_templates',
-          inputSchema: {
-            type: 'object',
-            properties: {}
-          }
-        },
-        {
-          name: '/index',
-          description: 'Index vault for semantic search (RAG)',
+          name: '-idx',
+          description: 'ID)X - Index vault for semantic search (RAG)',
           inputSchema: {
             type: 'object',
             properties: {
+              _: { 
+                type: 'string', 
+                description: 'Ignored - just type -idx' 
+              },
               vault_path: { type: 'string', description: 'Optional vault path override' }
             }
           }
         },
         {
-          name: '/ask',
-          description: 'Ask a question using RAG semantic search',
+          name: '-q',
+          description: 'Q)uestion - Ask a question using RAG semantic search',
           inputSchema: {
             type: 'object',
             properties: {
@@ -876,8 +887,41 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        // COMANDOS CORTOS
-        case '/capture': {
+        // COMANDOS CORTOS (con prefijo -)
+        case '-?': {
+          const helpText = `📚 opencode-obsidian - Comandos Disponibles
+
+Comandos Cortos:
+  -?              Muestra esta ayuda
+  -c <texto>      C)apture - Capturar nota
+  -f <query>      F)ind - Buscar en vault
+  -t <id>         T)ask - Ver/actualizar tarea
+  -d              D)aily - Resumen del día
+  -tpl            TePLates - Listar templates
+  -idx            ID)X - Indexar vault
+  -q <pregunta>   Q)uestion - Preguntar al vault
+
+Comandos Legacy:
+  obsidian_capture_note      Capturar nota
+  obsidian_list_templates    Listar templates
+  obsidian_search_vault      Buscar en vault
+  obsidian_get_daily_summary Resumen diario
+  obsidian_update_task_progress Actualizar tarea
+  obsidian_read_note         Leer nota
+  obsidian_set_vault         Configurar vault
+
+Ejemplos:
+  -c "Tengo que revisar bug 28416"
+  -f "error 403"
+  -t 28416 status:"PROD"
+  -tpl
+  -q "cómo solucioné el error"`;
+          return {
+            content: [{ type: 'text', text: helpText }]
+          };
+        }
+
+        case '-c': {
           const text = String(args?.text);
           const vaultPath = args?.vault_path as string | undefined;
           const result = await captureNote(text, vaultPath);
@@ -886,16 +930,19 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        case '/deploy': {
-          const tags = String(args?.tags);
-          const vaultPath = args?.vault_path as string | undefined;
-          const result = await captureNote(tags, vaultPath);
+        case '-f': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
+            await initializeVault(vp);
+          }
+          const query = String(args?.query);
+          const matches = await vaultManager!.searchNotes(query);
           return {
-            content: [{ type: 'text', text: result }]
+            content: [{ type: 'text', text: matches.join('\n') || 'No matches found' }]
           };
         }
 
-        case '/track': {
+        case '-t': {
           const azureId = String(args?.azure_id);
           const updates = {
             status: args?.status as string | undefined,
@@ -909,7 +956,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        case '/daily': {
+        case '-d': {
           const vaultPath = args?.vault_path as string | undefined;
           const targetDate = args?.date ? new Date(String(args?.date)) : undefined;
           const summary = await getDailySummary(vaultPath, targetDate);
@@ -918,19 +965,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        case '/search': {
-          const vp = getVaultPath(args?.vault_path as string);
-          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
-            await initializeVault(vp);
-          }
-          const query = String(args?.query);
-          const matches = await vaultManager!.searchNotes(query);
-          return {
-            content: [{ type: 'text', text: matches.join('\n') || 'No matches found' }]
-          };
-        }
-
-        case '/templates': {
+        case '-tpl': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!templateEngine || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -944,7 +979,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        case '/index': {
+        case '-idx': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!vaultSearch || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -955,7 +990,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           };
         }
 
-        case '/ask': {
+        case '-q': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!vaultSearch || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);

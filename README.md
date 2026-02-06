@@ -35,42 +35,48 @@ Cierra y vuelve a abrir opencode.
 
 **Verifica la instalación:**
 ```
-/templates
+-?
 ```
 
 ---
 
 ## 🎮 Uso Rápido
 
-### Comandos Esenciales (5)
+### Comandos Cortos
 
-| Comando | Descripción | Ejemplo |
-|---------|-------------|---------|
-| `/c` | **C**apturar nota | `/c Tengo que revisar bug 28416` |
-| `/f` | **F**ind (buscar) | `/f error 403` |
-| `/t` | **T**ask (tarea) | `/t 28416` |
-| `/d` | **D**aily | `/d` |
-| `/h` | **H**elp | `/h` |
+| Comando | Significado | Descripción | Ejemplo |
+|---------|-------------|-------------|---------|
+| `-?` | **?** (ayuda) | Mostrar comandos disponibles | `-?` |
+| `-c` | **C**apture | Capturar nota | `-c "Tengo que revisar bug 28416"` |
+| `-f` | **F**ind | Buscar en vault | `-f "error 403"` |
+| `-t` | **T**ask | Ver/actualizar tarea | `-t 28416` o `-t 28416 status:"PROD"` |
+| `-d` | **D**aily | Resumen del día | `-d` |
+| `-tpl` | **TPL** (templates) | Listar templates | `-tpl` |
+| `-idx` | **IDX** (index) | Indexar vault | `-idx` |
+| `-q` | **Q**uestion | Preguntar al vault | `-q "cómo solucioné el error"` |
 
 ### Flujo de Trabajo Típico
 
 ```bash
-# 1. Capturar idea rápida
-/c "Implementar feature 29999 para exportar PDF"
+# 1. Ver ayuda y comandos disponibles
+-?
 
-# 2. Verificar se crearon los archivos
+# 2. Capturar idea rápida
+-c "Implementar feature 29999 para exportar PDF"
+
+# 3. Verificar se crearon los archivos
 # → entregas/29999-...md
 # → tracking/29999.md
 # → proyectos/29999-context.md
 
-# 3. Registrar deploy cuando termines
-/c "git tag -a v2.9.0 -m '29999 feat: PDF export'"
+# 4. Registrar deploy cuando termines (incluye Azure ID)
+-c "git tag -a v2.9.0 -m '29999 feat: PDF export'"
 
-# 4. Buscar información después
-/f "comandos útiles docker"
+# 5. Buscar información después
+-f "comandos útiles docker"
 
-# 5. Preparar daily
-/d
+# 6. Preparar daily
+-d
 ```
 
 ---
@@ -142,4 +148,4 @@ ISC - Libre para usar, modificar y distribuir
 
 ---
 
-**¿Listo? Empieza con:** `/c "Mi primera nota"`
+**¿Listo? Empieza con:** `-c "Mi primera nota"`

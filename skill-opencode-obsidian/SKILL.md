@@ -119,7 +119,7 @@ Usuario: "Crear template para incidentes post-mortem"
 
 ### Workflow 5: Búsqueda Semántica (RAG)
 ```
-Usuario: "/ask cómo solucioné el error 403"
+Usuario: "-q \"cómo solucioné el error 403\""
 → Sistema busca semánticamente en todas las notas
 → Encuentra notas relacionadas con "error 403", "gateway", "OTP"
 → Muestra resultados ordenados por relevancia
@@ -171,40 +171,40 @@ export OBSIDIAN_VAULT_PATH="/path/to/vault"
 }
 ```
 
-## Comandos Cortos (Recomendados)
+## Comandos Cortos (con prefijo -)
 
 **Usa estos comandos para trabajar rápido:**
 
+### Ayuda
+- `-?` - Mostrar ayuda y lista de comandos disponibles
+
 ### Captura y Gestión
-- `/capture "texto"` - Capturar nota rápidamente
-  - Ej: `/capture Tengo que revisar el bug 28416`
+- `-c "texto"` - C)apture - Capturar nota rápidamente
+  - Ej: `-c "Tengo que revisar el bug 28416"`
 
-- `/deploy "tags"` - Registrar deploys (valida Azure ID automáticamente)
-  - Ej: `/deploy git tag -a v2.8.3 -m "28416 fix"`
+- `-f "query"` - F)ind - Buscar en vault
+  - Ej: `-f "comando docker"`
 
-- `/track 28416` - Ver o actualizar tracker de tarea
-  - Ej: `/track 28416` (muestra tracker)
-  - Ej: `/track 28416 status:"🟢 PROD" tag:v2.8.3` (actualiza)
+- `-t 28416` - T)ask - Ver o actualizar tracker de tarea
+  - Ej: `-t 28416` (muestra tracker)
+  - Ej: `-t 28416 status:"🟢 PROD" tag:v2.8.3` (actualiza)
 
 ### Daily y Resúmenes
-- `/daily` - Ver resumen de ayer
-  - Ej: `/daily`
-  - Ej: `/daily date:"2024-02-01"` (fecha específica)
+- `-d` - D)aily - Ver resumen de ayer
+  - Ej: `-d`
+  - Ej: `-d date:"2024-02-01"` (fecha específica)
 
 ### Búsqueda y RAG
-- `/search "query"` - Búsqueda simple por texto
-  - Ej: `/search "comando docker"`
+- `-idx` - ID)X - Indexar vault para búsqueda semántica
+  - Ej: `-idx`
 
-- `/index` - Indexar vault para búsqueda semántica (RAG)
-  - Ej: `/index` (ejecutar una vez o cuando hayas agregado muchas notas)
-
-- `/ask "pregunta"` - Preguntar a tu vault usando IA
-  - Ej: `/ask "¿cómo solucioné el error 403 en el gateway?"`
-  - Ej: `/ask "qué comandos útiles tengo sobre docker?" limit:3`
+- `-q "pregunta"` - Q)uestion - Preguntar a tu vault usando IA
+  - Ej: `-q "¿cómo solucioné el error 403?"`
+  - Ej: `-q "qué comandos útiles tengo" limit:3`
 
 ### Utilidades
-- `/templates` - Listar templates disponibles
-  - Ej: `/templates`
+- `-tpl` - TePLates - Listar templates disponibles
+  - Ej: `-tpl`
 
 ## Comandos Completos (Alternativos)
 

@@ -43,11 +43,17 @@ mklink /d %USERPROFILE%\.config\opencode\skills\opencode-obsidian C:\ruta\a\skil
 
 ### 1. Verificar instalación
 ```
-/templates
+-?
+```
+Debería mostrar la lista de comandos disponibles.
+
+### 2. Ver templates
+```
+-tpl
 ```
 Debería mostrar los 7 templates disponibles.
 
-### 2. Indexar tu vault (para RAG)
+### 3. Indexar tu vault (para RAG)
 ```
 /index
 ```

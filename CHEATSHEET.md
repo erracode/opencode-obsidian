@@ -1,50 +1,50 @@
 # 🎯 Cheat Sheet - opencode-obsidian
 
-## Comandos Rápidos
+## Comandos Rápidos (con prefijo -)
 
 ### 📥 Captura (1 segundo)
 ```
-/capture Tengo que revisar el bug 28416
-/capture docker-compose logs -f servicio
-/capture Aprendí que se puede usar Redis para cache
+-c "Tengo que revisar el bug 28416"
+-c "docker-compose logs -f servicio"
+-c "Aprendí que se puede usar Redis para cache"
 ```
 
 ### 🚀 Deploys (Validación automática)
 ```
 # ✅ CORRECTO - Con Azure ID
-/deploy git tag -a v2.8.3 -m "28416 fix OTP"
+-c "git tag -a v2.8.3 -m '28416 fix OTP'"
 
 # ❌ INCORRECTO - Sin Azure ID (será rechazado)
-/deploy git tag -a v2.8.3 -m "fix general"
+-c "git tag -a v2.8.3 -m 'fix general'"
 ```
 
 ### 📊 Tracking
 ```
-/track 28416                          # Ver estado
-/track 28416 status:"🟢 PROD"         # Actualizar a PROD
-/track 28416 tag:v2.8.3               # Añadir tag
+-t 28416                          # Ver estado
+-t 28416 status:"🟢 PROD"         # Actualizar a PROD
+-t 28416 tag:v2.8.3               # Añadir tag
 ```
 
 ### 📅 Daily Standup
 ```
-/daily                                # Resumen de ayer
-/daily date:"2024-02-01"              # Fecha específica
+-d                                # Resumen de ayer
+-d date:"2024-02-01"              # Fecha específica
 ```
 
 ### 🔍 Búsqueda
 ```
-/search "comando docker"              # Búsqueda simple
-/search "git rebase"                  # Buscar recursos
+-f "comando docker"              # Búsqueda simple
+-f "git rebase"                  # Buscar recursos
 
-/index                                # Indexar (primera vez)
-/ask "cómo solucioné el error 403"    # RAG semántico
-/ask "qué tareas tengo pendientes"    # Preguntas naturales
+-idx                              # Indexar (primera vez)
+-q "cómo solucioné el error 403"  # RAG semántico
+-q "qué tareas tengo pendientes"  # Preguntas naturales
 ```
 
 ### 🛠️ Utilidades
 ```
-/templates                            # Ver templates
-/ask "qué templates tengo disponibles"
+-tpl                              # Ver templates
+-?                                # Mostrar ayuda
 ```
 
 ## Flujos Completos
@@ -53,7 +53,7 @@
 
 **Paso 1**: Capturar
 ```
-/capture Implementar feature 28999 para exportar reportes en PDF
+-c "Implementar feature 28999 para exportar reportes en PDF"
 ```
 
 **Resultado automático**:
@@ -70,29 +70,27 @@ Abrir `entregas/28999-...md` y llenar:
 
 **Paso 3**: Hacer deploy
 ```
-/deploy git tag -a v2.8.3 -m "28999 feat: PDF export"
+-c "git tag -a v2.8.3 -m '28999 feat: PDF export'"
 ```
 → Actualiza tracker automáticamente a 🟢 PROD
 
 ### 2. Documentar Comando Útil (10 segundos)
 
 ```
-/capture Comando útil: 
-docker exec -it container_name psql -U user -d db
-Para conectarse a la base de datos del container
+-c "Comando útil: docker exec -it container_name psql -U user -d db"
 ```
 
 → Guarda en `recursos/docker-psql.md`
 
 **Después buscar**:
 ```
-/ask cómo me conecto a la base de datos de docker
+-q "cómo me conecto a la base de datos de docker"
 ```
 
 ### 3. Preparar Daily (5 segundos)
 
 ```
-/daily
+-d
 ```
 
 **Output**:
