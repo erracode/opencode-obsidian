@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+mcp-server/dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database (local only - each user has their own)
+.lancedb/
+.obsidian-search-index/
+
+# Vault data (user-specific)
+vault/inbox/*
+vault/entregas/*
+vault/tracking/*
+vault/proyectos/*
+vault/recursos/*
+vault/daily/*
+!vault/templates/
+!vault/README.md
+
+# User configuration
+.opencode-obsidian.config.json
