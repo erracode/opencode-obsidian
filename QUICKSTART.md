@@ -43,60 +43,63 @@ mklink /d %USERPROFILE%\.config\opencode\skills\opencode-obsidian C:\ruta\a\skil
 
 ### 1. Verificar instalación
 ```
--?
+>oo help
 ```
 Debería mostrar la lista de comandos disponibles.
 
 ### 2. Ver templates
 ```
--tpl
+>oo tpl
 ```
 Debería mostrar los 7 templates disponibles.
 
 ### 3. Indexar tu vault (para RAG)
 ```
-/index
+>oo idx
 ```
 Esto indexa todas tus notas para búsqueda semántica.
 
-### 3. Capturar tu primera nota
+### 4. Capturar tu primera nota
 ```
-/capture Tengo que revisar el bug 28416 en el gateway de pagos
+>oo cap "Tengo que revisar el bug 28416 en el gateway de pagos"
 ```
 
 ## Comandos Esenciales
 
 ### 📥 Captura y Gestión
 ```
-/capture "texto"              # Capturar nota rápida
-/deploy "git tags"            # Registrar deploy (valida Azure ID)
-/track 28416                  # Ver tracker de tarea
-/track 28416 status:"🟢 PROD" tag:v2.8.3  # Actualizar tarea
+>oo cap "texto"              # Capturar nota rápida
+>oo cap -f archivo.txt       # Capturar desde archivo
+>oo deploy "git tags"        # Registrar deploy (valida Azure ID)
+>oo task 28416               # Ver tracker de tarea
+>oo task 28416 status "🟢 PROD" tag v2.8.3  # Actualizar tarea
 ```
 
 ### 📊 Daily y Resúmenes
 ```
-/daily                        # Resumen de ayer
-/daily date:"2024-02-01"      # Resumen de fecha específica
+>oo daily                    # Resumen de ayer
+>oo daily date "2024-02-01"  # Resumen de fecha específica
 ```
 
 ### 🔍 Búsqueda
 ```
-/search "comando docker"      # Búsqueda simple
-/ask "cómo solucioné el error 403"  # Búsqueda semántica (RAG)
+>oo find "comando docker"    # Búsqueda simple
+>oo ask "cómo solucioné el error 403"  # Búsqueda semántica (RAG)
 ```
 
 ### 🛠️ Utilidades
 ```
-/index                        # Indexar vault para RAG
-/templates                    # Listar templates
+>oo idx                      # Indexar vault para RAG
+>oo tpl                      # Listar templates
+>oo read "ruta/nota.md"      # Leer nota específica
+>oo deploys                  # Listar deploy tags
 ```
 
 ## Flujos de Trabajo Comunes
 
 ### Flujo 1: Nueva Tarea de Azure
 ```
-/capture Tengo que implementar la feature 28999 para exportar reportes
+>oo cap "Tengo que implementar la feature 28999 para exportar reportes"
 → Genera automáticamente:
    - entregas/28999-...
    - tracking/28999.md
@@ -105,7 +108,7 @@ Esto indexa todas tus notas para búsqueda semántica.
 
 ### Flujo 2: Registrar Deploy
 ```
-/deploy git tag -a v2.8.3 -m "28999 fix report export"
+>oo deploy "git tag -a v2.8.3 -m '28999 fix report export'"
 → Valida que tenga Azure ID
 → Actualiza tracker 28999 a PROD
 → Cambia estado a 🟢 PROD
@@ -113,7 +116,7 @@ Esto indexa todas tus notas para búsqueda semántica.
 
 ### Flujo 3: Daily Standup
 ```
-/daily
+>oo daily
 → Analiza todas las notas de ayer
 → Detecta tareas completadas
 → Muestra deploys realizados
@@ -122,7 +125,7 @@ Esto indexa todas tus notas para búsqueda semántica.
 
 ### Flujo 4: Buscar Información
 ```
-/ask qué comandos útiles tengo sobre docker
+>oo ask "qué comandos útiles tengo sobre docker"
 → Busca semánticamente en todas las notas
 → Encuentra recursos relacionados
 ```
@@ -143,8 +146,8 @@ vault/
 ## Tips
 
 1. **Siempre usa Azure ID** en los mensajes de git tags: `git tag -a v2.8.3 -m "28416 fix"`
-2. **Indexa regularmente** si agregas muchas notas: `/index`
-3. **Sé específico** en tus preguntas al usar `/ask`
+2. **Indexa regularmente** si agregas muchas notas: `>oo idx`
+3. **Sé específico** en tus preguntas al usar `>oo ask`
 4. **Los templates** se generan automáticamente, solo llénalos
 
 ## Solución de Problemas
@@ -156,7 +159,7 @@ vault/
 **Solución**: Verifica que tu `opencode.json` tenga el formato correcto (usa array para command)
 
 ### Error: "El índice no existe"
-**Solución**: Ejecuta `/index` primero antes de usar `/ask`
+**Solución**: Ejecuta `>oo idx` primero antes de usar `>oo ask`
 
 ### Los comandos no aparecen
 **Solución**: Reinicia opencode completamente
@@ -165,21 +168,21 @@ vault/
 
 ### Ejemplo 1: Bug en Producción
 ```
-/capture URGENTE: Error 500 en el endpoint de pagos afectando usuarios
+>oo cap "URGENTE: Error 500 en el endpoint de pagos afectando usuarios"
 → Genera entrega para reportar
 → Crea tracker con prioridad alta
 ```
 
 ### Ejemplo 2: Aprender algo nuevo
 ```
-/capture Comando útil: docker-compose logs -f --tail=100 nombre_servicio
+>oo cap "Comando útil: docker-compose logs -f --tail=100 nombre_servicio"
 → Guarda en recursos/
 → Disponible para búsqueda después
 ```
 
 ### Ejemplo 3: Preparar Daily
 ```
-/daily
+>oo daily
 → Revisa qué hiciste ayer
 → Prepara tu standup en 10 segundos
 ```
@@ -195,8 +198,8 @@ Si tienes problemas:
 ## Próximos Pasos
 
 1. ✅ Comienza a capturar tus notas
-2. ✅ Indexa tu vault: `/index`
-3. ✅ Prueba el daily: `/daily`
-4. ✅ Experimenta con RAG: `/ask`
+2. ✅ Indexa tu vault: `>oo idx`
+3. ✅ Prueba el daily: `>oo daily`
+4. ✅ Experimenta con RAG: `>oo ask`
 
 **¡Listo! Ahora tienes un second brain funcional.** 🧠

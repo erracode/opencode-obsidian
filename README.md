@@ -35,34 +35,38 @@ Cierra y vuelve a abrir opencode.
 
 **Verifica la instalación:**
 ```
-help
+>oo help
 ```
 
 ---
 
 ## 🎮 Uso Rápido
 
-### Comandos Cortos
+### Comandos (>oo)
 
 | Comando | Descripción | Ejemplo |
 |---------|-------------|---------|
-| `help` | Mostrar comandos disponibles | `help` |
-| `cap` | Capture - Capturar nota | `cap "Tengo que revisar bug 28416"` |
-| `find` | Find - Buscar en vault | `find "error 403"` |
-| `task` | Task - Ver/actualizar tarea | `task 28416` o `task 28416 status:"PROD"` |
-| `daily` | Daily - Resumen del día | `daily` |
-| `tpl` | Templates - Listar templates | `tpl` |
-| `idx` | Index - Indexar vault | `idx` |
-| `ask` | Ask - Preguntar al vault | `ask "cómo solucioné el error"` |
+| `>oo help` | Mostrar comandos disponibles | `>oo help` |
+| `>oo cap` | Capture - Capturar nota | `>oo cap "Tengo que revisar bug 28416"` |
+| `>oo cap -f` | Capture desde archivo | `>oo cap -f meeting_notes.txt` |
+| `>oo find` | Find - Buscar en vault | `>oo find "error 403"` |
+| `>oo read` | Read - Leer nota | `>oo read "tracking/28416.md"` |
+| `>oo task` | Task - Ver/actualizar tarea | `>oo task 28416` o `>oo task 28416 status "PROD"` |
+| `>oo daily` | Daily - Resumen del día | `>oo daily` |
+| `>oo tpl` | Templates - Listar templates | `>oo tpl` |
+| `>oo idx` | Index - Indexar vault | `>oo idx` |
+| `>oo ask` | Ask - Preguntar al vault | `>oo ask "cómo solucioné el error"` |
+| `>oo deploy` | Deploy - Registrar tags | `>oo deploy "git tag -a v2.8 -m '28416 fix'"` |
+| `>oo deploys` | Deploys - Listar deploys | `>oo deploys` |
 
 ### Flujo de Trabajo Típico
 
 ```bash
 # 1. Ver ayuda y comandos disponibles
-help
+>oo help
 
 # 2. Capturar idea rápida
-cap "Implementar feature 29999 para exportar PDF"
+>oo cap "Implementar feature 29999 para exportar PDF"
 
 # 3. Verificar se crearon los archivos
 # → entregas/29999-...md
@@ -70,13 +74,13 @@ cap "Implementar feature 29999 para exportar PDF"
 # → proyectos/29999-context.md
 
 # 4. Registrar deploy cuando termines (incluye Azure ID)
-cap "git tag -a v2.9.0 -m '29999 feat: PDF export'"
+>oo deploy "git tag -a v2.9.0 -m '29999 feat: PDF export'"
 
 # 5. Buscar información después
-find "comandos útiles docker"
+>oo find "comandos útiles docker"
 
 # 6. Preparar daily
-daily
+>oo daily
 ```
 
 ---
@@ -148,4 +152,4 @@ ISC - Libre para usar, modificar y distribuir
 
 ---
 
-**¿Listo? Empieza con:** `cap "Mi primera nota"`
+**¿Listo? Empieza con:** `>oo cap "Mi primera nota"`

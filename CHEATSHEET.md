@@ -4,47 +4,52 @@
 
 ### 📥 Captura (1 segundo)
 ```
-cap "Tengo que revisar el bug 28416"
-cap "docker-compose logs -f servicio"
-cap "Aprendí que se puede usar Redis para cache"
+>oo cap "Tengo que revisar el bug 28416"
+>oo cap "docker-compose logs -f servicio"
+>oo cap "Aprendí que se puede usar Redis para cache"
+>oo cap -f meeting_notes.txt        # Desde archivo
 ```
 
 ### 🚀 Deploys (Validación automática)
 ```
 # ✅ CORRECTO - Con Azure ID
-cap "git tag -a v2.8.3 -m '28416 fix OTP'"
+>oo deploy "git tag -a v2.8.3 -m '28416 fix OTP'"
 
 # ❌ INCORRECTO - Sin Azure ID (será rechazado)
-cap "git tag -a v2.8.3 -m 'fix general'"
+>oo deploy "git tag -a v2.8.3 -m 'fix general'"
+
+# Listar deploys
+>oo deploys
 ```
 
 ### 📊 Tracking
 ```
-task 28416                          # Ver estado
-task 28416 status:"🟢 PROD"         # Actualizar a PROD
-task 28416 tag:v2.8.3               # Añadir tag
+>oo task 28416                          # Ver estado
+>oo task 28416 status "🟢 PROD"         # Actualizar a PROD
+>oo task 28416 tag v2.8.3               # Añadir tag
 ```
 
 ### 📅 Daily Standup
 ```
-daily                                # Resumen de ayer
-daily date:"2024-02-01"              # Fecha específica
+>oo daily                                # Resumen de ayer
+>oo daily date "2024-02-01"              # Fecha específica
 ```
 
 ### 🔍 Búsqueda
 ```
-find "comando docker"              # Búsqueda simple
-find "git rebase"                  # Buscar recursos
+>oo find "comando docker"              # Búsqueda simple
+>oo find "git rebase"                  # Buscar recursos
 
-idx                                # Indexar (primera vez)
-ask "cómo solucioné el error 403"  # RAG semántico
-ask "qué tareas tengo pendientes"  # Preguntas naturales
+>oo idx                                # Indexar (primera vez)
+>oo ask "cómo solucioné el error 403"  # RAG semántico
+>oo ask "qué tareas tengo pendientes"  # Preguntas naturales
 ```
 
 ### 🛠️ Utilidades
 ```
-tpl                                # Ver templates
-help                               # Mostrar ayuda
+>oo tpl                                # Ver templates
+>oo help                               # Mostrar ayuda
+>oo read "tracking/28416.md"           # Leer nota
 ```
 
 ## Flujos Completos
@@ -53,7 +58,7 @@ help                               # Mostrar ayuda
 
 **Paso 1**: Capturar
 ```
-cap "Implementar feature 28999 para exportar reportes en PDF"
+>oo cap "Implementar feature 28999 para exportar reportes en PDF"
 ```
 
 **Resultado automático**:
@@ -70,27 +75,27 @@ Abrir `entregas/28999-...md` y llenar:
 
 **Paso 3**: Hacer deploy
 ```
-cap "git tag -a v2.8.3 -m '28999 feat: PDF export'"
+>oo deploy "git tag -a v2.8.3 -m '28999 feat: PDF export'"
 ```
 → Actualiza tracker automáticamente a 🟢 PROD
 
 ### 2. Documentar Comando Útil (10 segundos)
 
 ```
-cap "Comando útil: docker exec -it container_name psql -U user -d db"
+>oo cap "Comando útil: docker exec -it container_name psql -U user -d db"
 ```
 
 → Guarda en `recursos/docker-psql.md`
 
 **Después buscar**:
 ```
-ask "cómo me conecto a la base de datos de docker"
+>oo ask "cómo me conecto a la base de datos de docker"
 ```
 
 ### 3. Preparar Daily (5 segundos)
 
 ```
-daily
+>oo daily
 ```
 
 **Output**:
@@ -163,24 +168,24 @@ git tag -a v2.8.3 -m "28416 28999 fixes"     ✅ Múltiples IDs
 
 ### 💡 Tip 2: Indexa después de muchas notas
 ```
-cap [muchas notas...]
-cap [más notas...]
-idx          # Indexar para que RAG funcione bien
+>oo cap "muchas notas..."
+>oo cap "más notas..."
+>oo idx          # Indexar para que RAG funcione bien
 ```
 
 ### 💡 Tip 3: Usa fechas en daily
 ```
-daily date:"2024-01-15"    # Revisar qué hiciste ese día
+>oo daily date "2024-01-15"    # Revisar qué hiciste ese día
 ```
 
 ### 💡 Tip 4: Combina task y deploy
 ```
 # Opción 1: Deploy automático (recomendado)
-cap "git tag -a v2.8.3 -m '28416 fix'"
+>oo deploy "git tag -a v2.8.3 -m '28416 fix'"
 → Actualiza tracker automáticamente
 
 # Opción 2: Manual
-task 28416 status:"🟢 PROD" tag:v2.8.3
+>oo task 28416 status "🟢 PROD" tag v2.8.3
 ```
 
 ## Atajos Mentales
@@ -188,14 +193,14 @@ task 28416 status:"🟢 PROD" tag:v2.8.3
 ```
 Necesito...                → Uso...
 ─────────────────────────────────────────
-Guardar idea rápida        → cap
-Registrar deploy           → cap  
-Ver qué hice ayer          → daily
-Buscar algo que escribí    → find
-Ver estado tarea           → task
-Listar templates           → tpl
-Indexar notas              → idx
-Ayuda                      → help
+Guardar idea rápida        → >oo cap
+Registrar deploy           → >oo deploy  
+Ver qué hice ayer          → >oo daily
+Buscar algo que escribí    → >oo find
+Ver estado tarea           → >oo task
+Listar templates           → >oo tpl
+Indexar notas              → >oo idx
+Ayuda                      → >oo help
 ```
 
 ---

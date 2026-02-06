@@ -150,35 +150,46 @@ export OBSIDIAN_VAULT_PATH="/path/to/vault"
 ## Comandos Disponibles
 
 ### Ayuda
-- `help` - Mostrar ayuda y lista de comandos
+- `>oo help` - Mostrar ayuda y lista de comandos
 
 ### Captura y Gestión
-- `cap "texto"` - Capture - Capturar nota rápidamente
-  - Ej: `cap "Tengo que revisar el bug 28416"`
+- `>oo cap "texto"` - Capture - Capturar nota
+  - Ej: `>oo cap "Tengo que revisar el bug 28416"`
+  - Ej: `>oo cap -f meeting_notes.txt` (desde archivo)
 
-- `find "query"` - Find - Buscar en vault
-  - Ej: `find "comando docker"`
+- `>oo find "query"` - Find - Buscar en vault
+  - Ej: `>oo find "comando docker"`
 
-- `task 28416` - Task - Ver o actualizar tracker de tarea
-  - Ej: `task 28416` (muestra tracker)
-  - Ej: `task 28416 status:"🟢 PROD" tag:v2.8.3` (actualiza)
+- `>oo read "ruta"` - Read - Leer nota específica
+  - Ej: `>oo read "tracking/28416.md"`
+
+- `>oo task 28416` - Task - Ver o actualizar tracker
+  - Ej: `>oo task 28416` (muestra tracker)
+  - Ej: `>oo task 28416 status "🟢 PROD" tag v2.8.3` (actualiza)
 
 ### Daily y Resúmenes
-- `daily` - Daily - Ver resumen de ayer
-  - Ej: `daily`
-  - Ej: `daily date:"2024-02-01"` (fecha específica)
+- `>oo daily` - Daily - Ver resumen de ayer
+  - Ej: `>oo daily`
+  - Ej: `>oo daily date "2024-02-01"` (fecha específica)
 
 ### Búsqueda y RAG
-- `idx` - Index - Indexar vault para búsqueda semántica
-  - Ej: `idx`
+- `>oo idx` - Index - Indexar vault para búsqueda semántica
+  - Ej: `>oo idx`
 
-- `ask "pregunta"` - Ask - Preguntar a tu vault usando IA
-  - Ej: `ask "¿cómo solucioné el error 403?"`
-  - Ej: `ask "qué comandos útiles tengo" limit:3`
+- `>oo ask "pregunta"` - Ask - Preguntar a tu vault
+  - Ej: `>oo ask "¿cómo solucioné el error 403?"`
+  - Ej: `>oo ask "qué comandos útiles tengo" limit 3`
+
+### Deploys
+- `>oo deploy "tags"` - Deploy - Registrar deploy tags
+  - Ej: `>oo deploy "git tag -a v2.8.3 -m '28416 fix'"`
+
+- `>oo deploys` - Deploys - Listar deploy tags registrados
+  - Ej: `>oo deploys`
 
 ### Utilidades
-- `tpl` - Templates - Listar templates disponibles
-  - Ej: `tpl`
+- `>oo tpl` - Templates - Listar templates disponibles
+  - Ej: `>oo tpl`
 
 ### Comandos Legacy (también disponibles)
 - `obsidian_capture_note`

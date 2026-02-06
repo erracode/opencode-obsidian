@@ -676,15 +676,15 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
         },
         // COMANDOS CORTOS
         {
-          name: 'help',
-          description: 'Show help - list all available commands',
+          name: '>oo_help',
+          description: 'Show help - list all available >oo commands',
           inputSchema: {
             type: 'object',
             properties: {}
           }
         },
         {
-          name: 'cap',
+          name: '>oo_cap',
           description: 'Capture - Quick capture shortcut (same as obsidian_capture_note)',
           inputSchema: {
             type: 'object',
@@ -696,7 +696,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'find',
+          name: '>oo_find',
           description: 'Find - Quick vault search (same as obsidian_search_vault)',
           inputSchema: {
             type: 'object',
@@ -708,7 +708,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'task',
+          name: '>oo_task',
           description: 'Task - Quick tracker view/update for Azure task (same as obsidian_update_task_progress)',
           inputSchema: {
             type: 'object',
@@ -722,7 +722,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'daily',
+          name: '>oo_daily',
           description: 'Daily - Quick daily summary (same as obsidian_get_daily_summary)',
           inputSchema: {
             type: 'object',
@@ -733,7 +733,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'tpl',
+          name: '>oo_tpl',
           description: 'Templates - Quick list templates (same as obsidian_list_templates)',
           inputSchema: {
             type: 'object',
@@ -741,7 +741,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'idx',
+          name: '>oo_idx',
           description: 'Index - Index vault for semantic search (RAG)',
           inputSchema: {
             type: 'object',
@@ -751,7 +751,7 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
-          name: 'ask',
+          name: '>oo_ask',
           description: 'Ask - Ask a question using RAG semantic search',
           inputSchema: {
             type: 'object',
@@ -874,40 +874,42 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
         }
 
         // COMANDOS CORTOS
-        case 'help': {
+        case '>oo_help': {
           const helpText = `📚 opencode-obsidian - Comandos Disponibles
 
-Comandos Cortos:
-  help            Muestra esta ayuda
-  cap <texto>     Capture - Capturar nota
-  find <query>    Find - Buscar en vault
-  task <id>       Task - Ver/actualizar tarea
-  daily           Daily - Resumen del día
-  tpl             Templates - Listar templates
-  idx             Index - Indexar vault
-  ask <pregunta>  Ask - Preguntar al vault
-
-Comandos Legacy:
-  obsidian_capture_note      Capturar nota
-  obsidian_list_templates    Listar templates
-  obsidian_search_vault      Buscar en vault
-  obsidian_get_daily_summary Resumen diario
-  obsidian_update_task_progress Actualizar tarea
-  obsidian_read_note         Leer nota
-  obsidian_set_vault         Configurar vault
+Comandos:
+  >oo help            Muestra esta ayuda
+  >oo cap <texto>     Capture - Capturar nota
+  >oo cap -f <file>   Capture desde archivo
+  >oo find <query>    Find - Buscar en vault
+  >oo read <path>     Read - Leer nota específica
+  >oo task <id>       Task - Ver/actualizar tarea
+  >oo daily           Daily - Resumen del día
+  >oo tpl             Templates - Listar templates
+  >oo idx             Index - Indexar vault
+  >oo ask <pregunta>  Ask - Preguntar al vault
+  >oo deploy <tags>   Deploy - Registrar deploy tags
+  >oo deploys         Deploys - Listar deploy tags
 
 Ejemplos:
-  cap "Tengo que revisar bug 28416"
-  find "error 403"
-  task 28416 status:"PROD"
-  tpl
-  ask "cómo solucioné el error"`;
+  >oo cap "Tengo que revisar bug 28416"
+  >oo cap -f meeting_notes.txt
+  >oo find "error 403"
+  >oo task 28416
+  >oo task 28416 status "🟢 PROD"
+  >oo read "tracking/28416.md"
+  >oo tpl
+  >oo ask "cómo solucioné el error del OTP"
+  >oo daily
+  >oo idx
+  >oo deploy "git tag -a v2.8.3 -m '28416 fix OTP validation'"
+  >oo deploys`;
           return {
             content: [{ type: 'text', text: helpText }]
           };
         }
 
-        case 'cap': {
+        case '>oo_cap': {
           const text = String(args?.text);
           const vaultPath = args?.vault_path as string | undefined;
           const result = await captureNote(text, vaultPath);
@@ -916,7 +918,7 @@ Ejemplos:
           };
         }
 
-        case 'find': {
+        case '>oo_find': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -928,7 +930,7 @@ Ejemplos:
           };
         }
 
-        case 'task': {
+        case '>oo_task': {
           const azureId = String(args?.azure_id);
           const updates = {
             status: args?.status as string | undefined,
@@ -942,7 +944,7 @@ Ejemplos:
           };
         }
 
-        case 'daily': {
+        case '>oo_daily': {
           const vaultPath = args?.vault_path as string | undefined;
           const targetDate = args?.date ? new Date(String(args?.date)) : undefined;
           const summary = await getDailySummary(vaultPath, targetDate);
@@ -951,7 +953,7 @@ Ejemplos:
           };
         }
 
-        case 'tpl': {
+        case '>oo_tpl': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!templateEngine || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -965,7 +967,7 @@ Ejemplos:
           };
         }
 
-        case 'idx': {
+        case '>oo_idx': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!vaultSearch || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -976,7 +978,7 @@ Ejemplos:
           };
         }
 
-        case 'ask': {
+        case '>oo_ask': {
           const vp = getVaultPath(args?.vault_path as string);
           if (!vaultSearch || !vaultManager || vaultManager.getVaultPath() !== vp) {
             await initializeVault(vp);
@@ -986,7 +988,7 @@ Ejemplos:
           const isValid = await vaultSearch!.isIndexValid();
           if (!isValid) {
             return {
-              content: [{ type: 'text', text: '⚠️ El índice no existe o está desactualizado. Ejecuta `/index` primero.' }]
+              content: [{ type: 'text', text: '⚠️ El índice no existe o está desactualizado. Ejecuta `>oo_idx` primero.' }]
             };
           }
           
