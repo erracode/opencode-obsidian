@@ -78,7 +78,7 @@ vault/
 ├── tracking/        # Seguimiento de tareas
 ├── daily/           # Daily notes
 ├── recursos/        # Comandos, snippets, aprendizajes
-├── proyectos/       # Contextos de IA
+├── proyectos/       # Contextos para IA
 └── templates/       # Templates personalizados
 ```
 
@@ -89,48 +89,25 @@ vault/
 Usuario: "Tengo que revisar el bug 28416 en el gateway"
 → MCP detecta Azure ID
 → Guarda en inbox/
-→ Genera entrega/28416-gateway.md
-→ Genera tracking/28416.md
+→ Sugerencia: "¿Aplicar template de entrega?"
+→ Usuario confirma
+→ Genera entrega en entregas/28416-gateway-fix.md
 ```
 
-### Workflow 2: Registrar Deploy
+### Workflow 2: Generar tracker
 ```
-Usuario pega tags de git
-→ MCP extrae repositorios y versiones
-→ Actualiza tracking/XXXX.md con nuevo tag
-→ Cambia estado a PROD
-```
-
-### Workflow 3: Daily Summary
-```
-Usuario: "Qué hice ayer?"
-→ MCP busca tareas completadas
-→ Detecta deploys del día anterior
-→ Genera resumen formateado
+Usuario: "quiero hacer seguimiento de la tarea 28845"
+→ MCP busca notas relacionadas
+→ Genera tracker en tracking/28845.md
+→ Links automáticos a entrega, PR, etc.
 ```
 
-### Workflow 4: Crear Template Personalizado
+### Workflow 3: Contexto para IA
 ```
-Usuario: "Crear template para incidentes post-mortem"
-→ Pregunta: nombre, secciones, variables
-→ Crea vault/templates/incident-postmortem.md
-→ Disponible inmediatamente
-```
-
-### Workflow 5: Búsqueda Semántica (RAG)
-```
-Usuario: "-q \"cómo solucioné el error 403\""
-→ Sistema busca semánticamente en todas las notas
-→ Encuentra notas relacionadas con "error 403", "gateway", "OTP"
-→ Muestra resultados ordenados por relevancia
-```
-
-### Workflow 6: Daily Summary Inteligente
-```
-Usuario: "/daily"
-→ Sistema analiza todas las notas del día anterior
-→ Detecta tareas completadas, deploys, aprendizajes
-→ Genera resumen formateado para standup
+Usuario: "necesito contexto de la tarea 28248 para el editor"
+→ MCP compila información de múltiples notas
+→ Genera prompt en proyectos/28248-context.md
+→ Listo para copiar al editor
 ```
 
 ## Uso de Templates
@@ -163,83 +140,70 @@ export OBSIDIAN_VAULT_PATH="/path/to/vault"
   "mcp": {
     "opencode-obsidian": {
       "type": "local",
-      "command": "node",
-      "args": ["/path/to/opencode-obsidian/mcp-server/dist/index.js"],
+      "command": ["node", "/path/to/opencode-obsidian/mcp-server/dist/index.js"],
       "enabled": true
     }
   }
 }
 ```
 
-## Comandos Cortos (con prefijo -)
-
-**Usa estos comandos para trabajar rápido:**
+## Comandos Disponibles
 
 ### Ayuda
-- `-?` - Mostrar ayuda y lista de comandos disponibles
+- `help` - Mostrar ayuda y lista de comandos
 
 ### Captura y Gestión
-- `-c "texto"` - C)apture - Capturar nota rápidamente
-  - Ej: `-c "Tengo que revisar el bug 28416"`
+- `cap "texto"` - Capture - Capturar nota rápidamente
+  - Ej: `cap "Tengo que revisar el bug 28416"`
 
-- `-f "query"` - F)ind - Buscar en vault
-  - Ej: `-f "comando docker"`
+- `find "query"` - Find - Buscar en vault
+  - Ej: `find "comando docker"`
 
-- `-t 28416` - T)ask - Ver o actualizar tracker de tarea
-  - Ej: `-t 28416` (muestra tracker)
-  - Ej: `-t 28416 status:"🟢 PROD" tag:v2.8.3` (actualiza)
+- `task 28416` - Task - Ver o actualizar tracker de tarea
+  - Ej: `task 28416` (muestra tracker)
+  - Ej: `task 28416 status:"🟢 PROD" tag:v2.8.3` (actualiza)
 
 ### Daily y Resúmenes
-- `-d` - D)aily - Ver resumen de ayer
-  - Ej: `-d`
-  - Ej: `-d date:"2024-02-01"` (fecha específica)
+- `daily` - Daily - Ver resumen de ayer
+  - Ej: `daily`
+  - Ej: `daily date:"2024-02-01"` (fecha específica)
 
 ### Búsqueda y RAG
-- `-idx` - ID)X - Indexar vault para búsqueda semántica
-  - Ej: `-idx`
+- `idx` - Index - Indexar vault para búsqueda semántica
+  - Ej: `idx`
 
-- `-q "pregunta"` - Q)uestion - Preguntar a tu vault usando IA
-  - Ej: `-q "¿cómo solucioné el error 403?"`
-  - Ej: `-q "qué comandos útiles tengo" limit:3`
+- `ask "pregunta"` - Ask - Preguntar a tu vault usando IA
+  - Ej: `ask "¿cómo solucioné el error 403?"`
+  - Ej: `ask "qué comandos útiles tengo" limit:3`
 
 ### Utilidades
-- `-tpl` - TePLates - Listar templates disponibles
-  - Ej: `-tpl`
+- `tpl` - Templates - Listar templates disponibles
+  - Ej: `tpl`
 
-## Comandos Completos (Alternativos)
-
-- `obsidian_capture_note` - Capturar nota desordenada
-- `obsidian_apply_template` - Aplicar template a nota
-- `obsidian_search_vault` - Búsqueda semántica
-- `obsidian_get_daily_summary` - Resumen del día anterior
-- `obsidian_list_deploy_tags` - Listar tags de deploy
-- `obsidian_update_task_progress` - Actualizar progreso de tarea
-- `obsidian_list_templates` - Listar templates disponibles
-- `obsidian_read_note` - Leer nota específica
+### Comandos Legacy (también disponibles)
+- `obsidian_capture_note`
+- `obsidian_list_templates`
+- `obsidian_search_vault`
+- `obsidian_get_daily_summary`
+- `obsidian_update_task_progress`
+- `obsidian_read_note`
+- `obsidian_set_vault`
 
 ## Detección Automática
 
 El sistema detecta automáticamente:
-- **Azure IDs**: `28416`, `28976` (formato 2xxxx)
-- **Versiones**: `v1.62.0`, `v21.5.7`
+- **Azure IDs**: `28416`, `28976`, `2XXXX`
+- **Versiones**: `v2.8.3`, `v21.5.7`
 - **Repositorios**: `CKC-API-GATEWAY`, `CKC_WEBSITE`
-- **URLs**: PRs, Azure DevOps, wikis
+- **URLs**: `https://dev.azure.com/...`, PRs
 - **Git tags**: `git tag -a vX.Y.Z -m "mensaje"`
 
 ## Crear Templates Personalizados
 
 1. Crear archivo en `vault/templates/mi-template.md`
-2. Frontmatter obligatorio:
-   ```yaml
-   ---
-   name: mi-template
-   description: Descripción del template
-   triggers: ["keyword1", "keyword2"]
-   language: es
-   ---
-   ```
-3. Usar placeholders: `{{variable}}`
-4. Disponible inmediatamente vía `obsidian_apply_template`
+2. Añadir frontmatter con metadatos
+3. Escribir contenido con placeholders
+4. Guardar - disponible inmediatamente
 
 ## Referencias
 

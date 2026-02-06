@@ -8,7 +8,7 @@
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/opencode-obsidian.git
+git clone https://github.com/erracode/opencode-obsidian.git
 cd opencode-obsidian
 ```
 
@@ -35,7 +35,7 @@ Cierra y vuelve a abrir opencode.
 
 **Verifica la instalación:**
 ```
--?
+help
 ```
 
 ---
@@ -44,25 +44,25 @@ Cierra y vuelve a abrir opencode.
 
 ### Comandos Cortos
 
-| Comando | Significado | Descripción | Ejemplo |
-|---------|-------------|-------------|---------|
-| `-?` | **?** (ayuda) | Mostrar comandos disponibles | `-?` |
-| `-c` | **C**apture | Capturar nota | `-c "Tengo que revisar bug 28416"` |
-| `-f` | **F**ind | Buscar en vault | `-f "error 403"` |
-| `-t` | **T**ask | Ver/actualizar tarea | `-t 28416` o `-t 28416 status:"PROD"` |
-| `-d` | **D**aily | Resumen del día | `-d` |
-| `-tpl` | **TPL** (templates) | Listar templates | `-tpl` |
-| `-idx` | **IDX** (index) | Indexar vault | `-idx` |
-| `-q` | **Q**uestion | Preguntar al vault | `-q "cómo solucioné el error"` |
+| Comando | Descripción | Ejemplo |
+|---------|-------------|---------|
+| `help` | Mostrar comandos disponibles | `help` |
+| `cap` | Capture - Capturar nota | `cap "Tengo que revisar bug 28416"` |
+| `find` | Find - Buscar en vault | `find "error 403"` |
+| `task` | Task - Ver/actualizar tarea | `task 28416` o `task 28416 status:"PROD"` |
+| `daily` | Daily - Resumen del día | `daily` |
+| `tpl` | Templates - Listar templates | `tpl` |
+| `idx` | Index - Indexar vault | `idx` |
+| `ask` | Ask - Preguntar al vault | `ask "cómo solucioné el error"` |
 
 ### Flujo de Trabajo Típico
 
 ```bash
 # 1. Ver ayuda y comandos disponibles
--?
+help
 
 # 2. Capturar idea rápida
--c "Implementar feature 29999 para exportar PDF"
+cap "Implementar feature 29999 para exportar PDF"
 
 # 3. Verificar se crearon los archivos
 # → entregas/29999-...md
@@ -70,13 +70,13 @@ Cierra y vuelve a abrir opencode.
 # → proyectos/29999-context.md
 
 # 4. Registrar deploy cuando termines (incluye Azure ID)
--c "git tag -a v2.9.0 -m '29999 feat: PDF export'"
+cap "git tag -a v2.9.0 -m '29999 feat: PDF export'"
 
 # 5. Buscar información después
--f "comandos útiles docker"
+find "comandos útiles docker"
 
 # 6. Preparar daily
--d
+daily
 ```
 
 ---
@@ -148,4 +148,4 @@ ISC - Libre para usar, modificar y distribuir
 
 ---
 
-**¿Listo? Empieza con:** `-c "Mi primera nota"`
+**¿Listo? Empieza con:** `cap "Mi primera nota"`
