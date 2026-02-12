@@ -684,6 +684,18 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           }
         },
         {
+          name: '>oo_create',
+          description: 'Create - Generate template from existing note using task ID',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              template: { type: 'string', description: 'Template name (bitbucket-pr-standard, azure-delivery, etc.)' },
+              task_id: { type: 'string', description: 'Azure task ID (e.g., 28620)' }
+            },
+            required: ['template', 'task_id']
+          }
+        },
+        {
           name: '>oo_cap',
           description: 'Capture - Quick capture shortcut (same as obsidian_capture_note)',
           inputSchema: {
@@ -905,16 +917,82 @@ Ejemplos:
   >oo ask "cómo solucioné el error del OTP"    # Preguntar al vault con IA
   >oo deploy "git tag -a v2.8.3 -m '28416 fix'" # Registrar deploy
   >oo deploys                                 # Listar deploys realizados
+  >oo create "bitbucket-pr-standard" 28620    # Crear template PR para tarea
 
 💡 Tips:
 - Usa Azure IDs (28xxx) para generar trackers automáticamente
 - El sistema detecta git tags y valida Azure IDs
 - Indexa con >oo idx antes de usar >oo ask
-- Las notas se organizan automáticamente en carpetas`;
+- Las notas se organizan automáticamente en carpetas
+- Usa >oo create para generar templates rápidamente`;
 
           return {
             content: [{ type: 'text', text: helpText }]
           };
+        }
+
+                case '>oo_create': {
+          const templateName = String(args?.template);
+          const taskId = String(args?.task_id);
+          
+          try {
+            // Buscar la nota de contexto de la tarea
+            const contextPath = path.join('proyectos', `${taskId}-context.md`);
+            const deliveryPath = path.join('entregas', `${taskId}-*.md`);
+            
+            // Determinar qué nota usar
+            let notePath = contextPath;
+            if (await vaultManager!.exists(deliveryPath.replace('.*', ''))) {
+              // Encontrar el archivo de entrega exacto
+              const deliveryFiles = await vaultManager!.listNotes();
+              const exactDelivery = deliveryFiles.find(f => f.includes(`${taskId}-`));
+              if (exactDelivery) {
+                notePath = exactDelivery;
+              }
+            }
+            
+            if (!await vaultManager!.exists(notePath)) {
+              return {
+                content: [{ type: 'text', text: `❌ No se encontró información para la tarea ${taskId}. Usa >oo cap primero para capturar la tarea.` }]
+              };
+            }
+            
+            // Leer la nota original
+            const note = await vaultManager!.readNote(notePath);
+            
+            // Extraer variables
+            const variables = templateEngine!.extractVariables(note.content);
+            variables.azure_id = taskId;
+            
+            // Aplicar template
+            const newContent = templateEngine!.applyTemplate(templateName, variables);
+            
+            // Determinar nuevo path según el template
+            let newPath = notePath;
+            if (templateName === 'azure-delivery') {
+              newPath = path.join('entregas', `${taskId}-delivery.md`);
+            } else if (templateName === 'bitbucket-pr-standard' || templateName === 'bitbucket-pr-release') {
+              newPath = path.join('entregas', `${taskId}-pr.md`);
+            } else {
+              newPath = path.join('entregas', `${taskId}-${templateName}.md`);
+            }
+            
+            // Guardar la nota transformada
+            await vaultManager!.writeNote(newPath, newContent, {
+              ...note.data,
+              template: templateName,
+              original_path: notePath,
+              generated_at: new Date().toISOString()
+            });
+            
+            return {
+              content: [{ type: 'text', text: `✅ Template "${templateName}" creado para tarea ${taskId}\n📄 Nuevo archivo: ${newPath}\n\n📋 Contenido:\n${newContent}` }]
+            };
+          } catch (error: any) {
+            return {
+              content: [{ type: 'text', text: `❌ Error al crear template: ${error.message}` }]
+            };
+          }
         }
 
         case '>oo_cap': {
