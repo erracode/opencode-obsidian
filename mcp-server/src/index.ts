@@ -14,6 +14,14 @@ import { VaultManager } from './core/vault.js';
 import { TemplateEngine } from './core/template-engine.js';
 import { ContentDetector } from './core/detector.js';
 import { VaultSearch } from './core/rag.js';
+import {
+  handleAzureGetAssignments,
+  handleAzurePrepareDelivery,
+  handleAzurePublishComment,
+  handleAzureCreateDevTask,
+  handleAzureUpdateHours,
+  handleAzureTestConnection
+} from './azure/index.js';
 
 // Configuración
 let VAULT_PATH: string | null = process.env.OBSIDIAN_VAULT_PATH || null;
@@ -774,6 +782,77 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
             },
             required: ['question']
           }
+        },
+        // Azure DevOps Integration Tools
+        {
+          name: 'azure_get_my_assignments',
+          description: 'Get work items assigned to current user in Azure DevOps (Core Backend)',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            }
+          }
+        },
+        {
+          name: 'azure_prepare_delivery',
+          description: 'Prepare delivery document for a work item using azure-delivery template',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28719)' },
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            },
+            required: ['azure_id']
+          }
+        },
+        {
+          name: 'azure_publish_comment',
+          description: 'Publish delivery comment to Azure DevOps and mark as Resolved',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28719)' },
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            },
+            required: ['azure_id']
+          }
+        },
+        {
+          name: 'azure_create_dev_task',
+          description: 'Create a DEV task as child of a User Story in Azure DevOps',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              parent_id: { type: 'number', description: 'Parent User Story ID (e.g., 28618)' },
+              effort: { type: 'number', description: 'Optional: Estimated hours for the task' },
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            },
+            required: ['parent_id']
+          }
+        },
+        {
+          name: 'azure_update_hours',
+          description: 'Update completed hours and auto-calculate remaining hours',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28719)' },
+              completed: { type: 'number', description: 'Hours completed' },
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            },
+            required: ['azure_id', 'completed']
+          }
+        },
+        {
+          name: 'azure_test_connection',
+          description: 'Test Azure DevOps connection and validate PAT',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              vault_path: { type: 'string', description: 'Optional vault path override' }
+            }
+          }
         }
       ]
     };
@@ -1098,6 +1177,71 @@ Ejemplos:
           
           return {
             content: [{ type: 'text', text: response }]
+          };
+        }
+
+        // Azure DevOps Integration Handlers
+        case 'azure_get_my_assignments': {
+          const result = await handleAzureGetAssignments();
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case 'azure_prepare_delivery': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp || !templateEngine) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const result = await handleAzurePrepareDelivery(azureId, vp, vaultManager!, templateEngine!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case 'azure_publish_comment': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const result = await handleAzurePublishComment(azureId, vp, vaultManager!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case 'azure_create_dev_task': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp || !templateEngine) {
+            await initializeVault(vp);
+          }
+          const parentId = Number(args?.parent_id);
+          const effort = args?.effort ? Number(args?.effort) : undefined;
+          const result = await handleAzureCreateDevTask(parentId, effort, vp, vaultManager!, templateEngine!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case 'azure_update_hours': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const completed = Number(args?.completed);
+          const result = await handleAzureUpdateHours(azureId, completed, vp, vaultManager!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case 'azure_test_connection': {
+          const result = await handleAzureTestConnection();
+          return {
+            content: [{ type: 'text', text: result }]
           };
         }
 
