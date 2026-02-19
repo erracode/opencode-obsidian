@@ -1,4 +1,4 @@
-import { azureClient } from '../azure-client';
+import { getAzureClient } from '../azure-client';
 
 interface VaultManager {
   readNote(notePath: string): Promise<{ content: string; data: any }>;
@@ -18,6 +18,7 @@ export async function handleAzurePublishComment(
   vaultManager: VaultManager
 ): Promise<string> {
   try {
+    const azureClient = getAzureClient();
     // 1. Buscar archivo de entrega en vault/entregas/
     const deliveryFiles = await vaultManager.listNotes();
     const matchingFile = deliveryFiles.find(f => 

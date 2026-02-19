@@ -1,4 +1,4 @@
-import { azureClient } from '../azure-client';
+import { getAzureClient } from '../azure-client';
 
 /**
  * Valida la conexión con Azure DevOps
@@ -14,6 +14,7 @@ export async function validateAzureConnection(): Promise<{
   };
 }> {
   try {
+    const azureClient = getAzureClient();
     // Intentar obtener los proyectos para validar autenticación
     const response = await azureClient['client'].get('/_apis/projects?api-version=7.1&$top=1');
     

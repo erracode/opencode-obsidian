@@ -457,5 +457,12 @@ export class AzureDevOpsClient {
   }
 }
 
-// Exportar instancia singleton
-export const azureClient = new AzureDevOpsClient();
+// Lazy loading del cliente Azure para evitar errores al iniciar el MCP
+let azureClientInstance: AzureDevOpsClient | null = null;
+
+export function getAzureClient(): AzureDevOpsClient {
+  if (!azureClientInstance) {
+    azureClientInstance = new AzureDevOpsClient();
+  }
+  return azureClientInstance;
+}

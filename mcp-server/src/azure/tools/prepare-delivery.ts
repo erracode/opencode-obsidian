@@ -1,4 +1,4 @@
-import { azureClient } from '../azure-client';
+import { getAzureClient } from '../azure-client';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -26,6 +26,7 @@ export async function handleAzurePrepareDelivery(
   templateEngine: TemplateEngine
 ): Promise<string> {
   try {
+    const azureClient = getAzureClient();
     // 1. Obtener datos de Azure DevOps
     const workItem = await azureClient.getWorkItem(azureId);
     const parentWorkItem = await azureClient.getParentWorkItem(azureId);

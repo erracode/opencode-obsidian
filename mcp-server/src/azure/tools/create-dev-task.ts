@@ -1,4 +1,4 @@
-import { azureClient } from '../azure-client';
+import { getAzureClient } from '../azure-client';
 
 interface VaultManager {
   writeNote(notePath: string, content: string, data?: any): Promise<void>;
@@ -22,6 +22,7 @@ export async function handleAzureCreateDevTask(
   templateEngine: TemplateEngine
 ): Promise<string> {
   try {
+    const azureClient = getAzureClient();
     // 1. Obtener HU padre
     const parentWorkItem = await azureClient.getWorkItem(parentId);
     

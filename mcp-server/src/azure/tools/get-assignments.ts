@@ -1,4 +1,4 @@
-import { azureClient, WorkItem } from '../azure-client';
+import { getAzureClient, WorkItem } from '../azure-client';
 
 /**
  * Tool: azure_get_my_assignments
@@ -7,6 +7,7 @@ import { azureClient, WorkItem } from '../azure-client';
  */
 export async function handleAzureGetAssignments(): Promise<string> {
   try {
+    const azureClient = getAzureClient();
     const workItems = await azureClient.getMyWorkItems(['New', 'Active', 'Resolved']);
 
     if (workItems.length === 0) {

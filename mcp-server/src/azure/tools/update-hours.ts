@@ -1,4 +1,4 @@
-import { azureClient } from '../azure-client';
+import { getAzureClient } from '../azure-client';
 
 interface VaultManager {
   readNote(notePath: string): Promise<{ content: string; data: any }>;
@@ -18,6 +18,7 @@ export async function handleAzureUpdateHours(
   vaultManager: VaultManager
 ): Promise<string> {
   try {
+    const azureClient = getAzureClient();
     // 1. Obtener work item actual
     const workItem = await azureClient.getWorkItem(azureId);
     const effort = workItem.fields['Microsoft.VSTS.Scheduling.Effort'];
