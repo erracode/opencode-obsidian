@@ -14,6 +14,8 @@ import { VaultManager } from './core/vault.js';
 import { TemplateEngine } from './core/template-engine.js';
 import { ContentDetector } from './core/detector.js';
 import { VaultSearch } from './core/rag.js';
+import { loadConfig as loadAppConfig, getDataDir } from './core/config.js';
+import { validateAzurePAT } from './cli/azure-validator.js';
 import {
   handleAzureGetAssignments,
   handleAzurePrepareDelivery,
@@ -853,6 +855,14 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
               vault_path: { type: 'string', description: 'Optional vault path override' }
             }
           }
+        },
+        {
+          name: '>oo_status',
+          description: 'Show current configuration and status',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
         }
       ]
     };
@@ -1242,6 +1252,51 @@ Ejemplos:
           const result = await handleAzureTestConnection();
           return {
             content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case '>oo_status': {
+          const config = await loadAppConfig();
+          
+          if (!config) {
+            return {
+              content: [{ type: 'text', text: '❌ No hay configuración. Ejecuta `oo-setup setup` en terminal.' }]
+            };
+          }
+          
+          let status = `📊 opencode-obsidian - Estado\n`;
+          status += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+          
+          status += `📁 Vault: ${config.vault.path}\n`;
+          
+          status += `\n🔗 Azure: ${config.azure.organization}/${config.azure.project}\n`;
+          
+          const pat = process.env.AZURE_PAT;
+          if (pat) {
+            status += `   PAT: ****${pat.slice(-4)}\n`;
+            
+            try {
+              const validation = await validateAzurePAT(pat, config.azure.organization, config.azure.project);
+              status += `   Estado: ${validation.valid ? '✅ Válido' : '❌ ' + validation.error}\n`;
+            } catch {
+              status += `   Estado: ⚠️ No verificado\n`;
+            }
+          } else {
+            status += `   PAT: ⚠️ No configurado\n`;
+          }
+          
+          const ragPath = path.join(getDataDir(), 'lancedb');
+          try {
+            await fs.access(ragPath);
+            status += `\n📊 RAG: ✅ Indexado\n`;
+          } catch {
+            status += `\n📊 RAG: ⚠️ No indexado (ejecuta >oo idx)\n`;
+          }
+          
+          status += `\n📄 Config: ~/.config/opencode-obsidian/config.json`;
+          
+          return {
+            content: [{ type: 'text', text: status }]
           };
         }
 

@@ -1,89 +1,108 @@
 # Configuración de opencode-obsidian
 
-## Variables de Entorno
+## Configuración con CLI
 
-### Obligatoria
 ```bash
-export OBSIDIAN_VAULT_PATH="/ruta/completa/a/opencode-obsidian/vault"
+# Configurar todo (wizard interactivo)
+oo-setup setup
+
+# Ver estado actual
+oo-setup status
+
+# Modificar configuración
+oo-setup config --vault "C:/ruta/al/vault"
+oo-setup config --org mi-organizacion
+oo-setup config --project "Mi Proyecto"
 ```
 
-### Opcionales
-```bash
-# Para debugging
-export OBSIDIAN_DEBUG=true
+---
 
-# Para cambiar el modelo de embeddings (default: local)
-export EMBEDDING_MODEL="Xenova/all-MiniLM-L6-v2"
-```
+## Archivos de Configuración
 
-## Configuración de MCP (opencode.json)
+| Archivo | Ubicación | Propósito |
+|---------|-----------|-----------|
+| `config.json` | `~/.config/opencode-obsidian/` | Configuración principal |
+| `.env.local` | Directorio del proyecto | Azure PAT |
+| `lancedb/` | `~/.local/share/opencode-obsidian/` | Índice RAG |
 
-Ubicación: `~/.config/opencode/opencode.json`
+---
+
+## config.json
 
 ```json
 {
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "opencode-obsidian": {
-      "type": "local",
-      "command": "node",
-      "args": [
-        "C:/Users/USUARIO/Documents/work/personal/opencode-obsidian/mcp-server/dist/index.js"
-      ],
-      "enabled": true
-    }
+  "version": "1.0.0",
+  "vault": {
+    "path": "C:/Users/Jesus/Documents/Obsidian Vault",
+    "lastAccessed": "2026-02-19T10:00:00Z"
   },
-  "provider": {
-    ...
+  "azure": {
+    "organization": "cinemarkintl",
+    "project": "Core Backend",
+    "patLast4": "4eG6"
   }
 }
 ```
 
-**Nota**: En Windows, usa forward slashes (/) en las rutas dentro de opencode.json
+---
 
-## Verificación de Instalación
-
-Después de configurar, verifica que todo funciona:
+## .env.local (Azure DevOps)
 
 ```bash
-# 1. Listar templates disponibles
-obsidian_list_templates
-
-# 2. Capturar una nota de prueba
-obsidian_capture_note
-content: "Tarea de prueba 99999 para verificar funcionamiento"
-
-# 3. Verificar archivos creados
-ls vault/inbox/
-ls vault/tracking/
+AZURE_PAT=tu_personal_access_token
+AZURE_ORG=tu_organizacion
+AZURE_PROJECT=tu_proyecto
 ```
+
+**Obtener PAT:**
+1. Ve a https://dev.azure.com/tu_org/_usersSettings/tokens
+2. Crea un nuevo token con permisos "Work Items (Read & Write)"
+3. Copia el token a `.env.local`
+
+---
+
+## Migración desde versión anterior
+
+Si tienes configuración en `~/.opencode-obsidian.config.json`, `oo-setup setup` la migrará automáticamente a la nueva ubicación XDG.
+
+---
+
+## Multi-vault
+
+Para usar un vault diferente temporalmente:
+
+```
+>oo cap "nota" vault_path: "/otro/vault"
+```
+
+O cambiar la configuración:
+
+```bash
+oo-setup config --vault "/otro/vault"
+```
+
+---
 
 ## Troubleshooting
 
-### Error: "Vault path is not set"
-Solución: Asegúrate de que la variable OBSIDIAN_VAULT_PATH esté configurada
-
-### Error: "Cannot find module"
-Solución: Ejecuta `npm install` y `npm run build` en la carpeta mcp-server
-
-### Error: "Unknown tool"
-Solución: Verifica que el MCP esté habilitado en opencode.json
-
-## Configuración por Proyecto
-
-Si trabajas en múltiples proyectos, puedes tener un vault por proyecto:
+### Ver todo el estado
 
 ```bash
-# Vault personal
-export OBSIDIAN_VAULT_PATH="$HOME/Documents/work/personal/opencode-obsidian/vault"
-
-# Vault trabajo (sobrescribe para sesión específica)
-export OBSIDIAN_VAULT_PATH="$HOME/work/company-vault"
+oo-setup status
 ```
 
-O usar el argumento `vault_path` en cada comando:
+### Reconfigurar desde cero
+
+```bash
+# Borrar configuración existente
+rm ~/.config/opencode-obsidian/config.json
+
+# Ejecutar setup
+oo-setup setup
 ```
-obsidian_capture_note
-content: "nota"
-vault_path: "/otro/vault"
-```
+
+### PAT no funciona
+
+1. Verifica que no haya expirado
+2. Verifica que tenga permisos correctos
+3. Ejecuta `oo-setup status` para validar conexión

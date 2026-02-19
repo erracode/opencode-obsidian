@@ -1,33 +1,29 @@
 # opencode-obsidian
 
-> Sistema inteligente de gestión de conocimiento que transforma notas desordenadas en entregables estructurados.  
-> Inspirado en [gemini-obsidian](https://github.com/thoreinstein/gemini-obsidian) de thoreinstein.
+> Sistema inteligente de gestión de conocimiento que transforma notas desordenadas en entregables estructurados.
 
-## 🚀 Instalación Rápida (3 pasos)
+## 🚀 Instalación Rápida
 
-### 1. Clonar el repositorio
+### 1. Clonar y compilar
 
 ```bash
 git clone https://github.com/erracode/opencode-obsidian.git
-cd opencode-obsidian
+cd opencode-obsidian/mcp-server
+npm install
+npm run build
+npm link
 ```
 
-### 2. Ejecutar instalador
+### 2. Configurar
 
-**Windows (PowerShell):**
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
-
-**Mac/Linux:**
 ```bash
-bash install.sh
+oo-setup setup
 ```
 
-O usa el instalador universal:
-```bash
-node install.js
-```
+El wizard te guiará para:
+- Detectar vaults de Obsidian existentes
+- Crear estructura de carpetas necesaria
+- Configurar Azure DevOps (opcional)
 
 ### 3. Reiniciar opencode
 
@@ -35,72 +31,86 @@ Cierra y vuelve a abrir opencode.
 
 **Verifica la instalación:**
 ```
->oo help
+>oo status
 ```
 
 ---
 
-### Comandos Disponibles (>oo)
+## 📋 Comandos CLI
+
+| Comando | Descripción |
+|---------|-------------|
+| `oo-setup setup` | Wizard de configuración interactivo |
+| `oo-setup status` | Ver estado actual del sistema |
+| `oo-setup config` | Modificar configuración |
+
+**Ejemplos:**
+```bash
+oo-setup setup                              # Configurar todo
+oo-setup status                             # Ver estado
+oo-setup config --vault "C:/ruta/al/vault"  # Cambiar vault
+oo-setup config --org mi-organizacion       # Cambiar org Azure
+```
+
+---
+
+## 📋 Comandos MCP (>oo)
 
 | Comando | Descripción | Ejemplo |
 |---------|-------------|---------|
-| `>oo help` | Mostrar ayuda completa con ejemplos | `>oo help` |
-| `>oo cap` | Capture - Capturar nota | `>oo cap "Tengo que revisar bug 28416"` |
-| `>oo cap -f` | Capture desde archivo | `>oo cap -f meeting_notes.txt` |
-| `>oo find` | Find - Buscar en vault | `>oo find "error 403"` |
-| `>oo read` | Read - Leer nota específica | `>oo read "tracking/28416.md"` |
-| `>oo task` | Task - Ver/actualizar tarea | `>oo task 28416` |
-| `>oo task` | Task - Actualizar estado y tag | `>oo task 28416 status "🟢 PROD" tag v2.8.3` |
-| `>oo daily` | Daily - Resumen del día | `>oo daily` |
-| `>oo tpl` | Templates - Listar templates | `>oo tpl` |
-| `>oo idx` | Index - Indexar vault para RAG | `>oo idx` |
-| `>oo ask` | Ask - Preguntar al vault con IA | `>oo ask "cómo solucioné el error"` |
-| `>oo deploy` | Deploy - Registrar deploy tags | `>oo deploy "git tag -a v2.8.3 -m '28416 fix'"` |
-| `>oo deploys` | Deploys - Listar deploys realizados | `>oo deploys` |
-
-**💡 Tips de Producción:**
-- Usa Azure IDs (28xxx) para generar trackers automáticamente
-- El sistema detecta git tags y valida Azure IDs obligatoriamente
-- Indexa con `>oo idx` antes de usar `>oo ask` para mejor RAG
-- Las notas se organizan automáticamente en carpetas según el contenido
-
-### Flujo de Trabajo Típico
-
-```bash
-# 1. Ver ayuda y comandos disponibles
->oo help
-
-# 2. Capturar idea rápida
->oo cap "Implementar feature 29999 para exportar PDF"
-
-# 3. Verificar se crearon los archivos
-# → entregas/29999-...md
-# → tracking/29999.md
-# → proyectos/29999-context.md
-
-# 4. Registrar deploy cuando termines (incluye Azure ID)
->oo deploy "git tag -a v2.9.0 -m '29999 feat: PDF export'"
-
-# 5. Buscar información después
->oo find "comandos útiles docker"
-
-# 6. Preparar daily
->oo daily
-```
+| `>oo status` | Ver configuración actual | `>oo status` |
+| `>oo cap` | Capturar nota | `>oo cap "Tengo que revisar bug 28416"` |
+| `>oo find` | Buscar en vault | `>oo find "error 403"` |
+| `>oo task` | Ver/actualizar tarea | `>oo task 28416` |
+| `>oo daily` | Resumen del día | `>oo daily` |
+| `>oo tpl` | Listar templates | `>oo tpl` |
+| `>oo idx` | Indexar para RAG | `>oo idx` |
+| `>oo ask` | Preguntar al vault | `>oo ask "cómo solucioné el error"` |
+| `>oo help` | Mostrar ayuda | `>oo help` |
 
 ---
 
 ## 📁 Estructura del Vault
 
 ```
-~/opencode-vault/          # Tu vault (creado automáticamente)
-├── 📁 inbox/              # Notas capturadas
-├── 📁 entregas/           # Templates Azure
-├── 📁 tracking/           # Seguimiento de tareas
-├── 📁 daily/              # Daily notes
-├── 📁 recursos/           # Comandos, snippets
-├── 📁 proyectos/          # Contextos para IA
-└── 📁 templates/          # 7 templates base
+vault/
+├── inbox/           # Notas capturadas
+├── entregas/        # Templates Azure terminados
+├── tracking/        # Seguimiento de tareas
+├── daily/           # Daily notes
+├── recursos/        # Comandos, snippets
+├── proyectos/       # Contextos para IA
+└── templates/       # Templates personalizados
+```
+
+---
+
+## 📁 Estructura de Configuración (XDG)
+
+```
+~/.config/opencode-obsidian/
+├── config.json      # Configuración principal
+
+~/.local/share/opencode-obsidian/
+├── lancedb/         # Índice RAG
+```
+
+---
+
+## 🔗 Integración con Azure DevOps
+
+El sistema se integra con Azure DevOps para:
+- Ver tareas asignadas
+- Preparar documentos de entrega
+- Actualizar horas de trabajo
+- Publicar comentarios
+
+Configura Azure DevOps durante `oo-setup setup` o edita `.env.local`:
+
+```bash
+AZURE_PAT=tu_pat_aqui
+AZURE_ORG=tu_organizacion
+AZURE_PROJECT=tu_proyecto
 ```
 
 ---
@@ -109,10 +119,10 @@ Cierra y vuelve a abrir opencode.
 
 1. **Abre Obsidian**
 2. **"Abrir carpeta como vault"**
-3. **Selecciona:** `~/opencode-vault`
+3. **Selecciona tu vault**
 4. **¡Listo!**
 
-Ahora puedes editar notas desde Obsidian y se sincronizan automáticamente.
+Las notas se sincronizan automáticamente.
 
 ---
 
@@ -122,39 +132,29 @@ Ahora puedes editar notas desde Obsidian y se sincronizan automáticamente.
 → Reinicia opencode completamente
 
 ### "Vault path is not set"
-→ Ejecuta el instalador de nuevo o ejecuta:
-```
-obsidian_set_vault
-path: "/ruta/a/tu/vault"
-```
+→ Ejecuta `oo-setup setup`
 
-### "Error en instalación"
-→ Verifica que tienes Node.js instalado:
-```bash
-node --version  # Debe ser v18+
-```
+### "Azure PAT inválido"
+→ Ejecuta `oo-setup status` para diagnosticar
+→ Actualiza `.env.local` con PAT válido
+
+### "RAG no funciona"
+→ Ejecuta `>oo idx` para indexar el vault
 
 ---
 
-## 📚 Documentación Completa
+## 📚 Documentación
 
 - **QUICKSTART.md** - Guía de inicio rápido
-- **CHEATSHEET.md** - Referencia de comandos  
-- **OBSIDIAN_INTEGRATION.md** - Integración con Obsidian
-- **SETUP_CHECKLIST.md** - Checklist de instalación
+- **CHEATSHEET.md** - Referencia de comandos
 
 ---
 
 ## 🙏 Créditos
 
-- Inspirado en [gemini-obsidian](https://github.com/thoreinstein/gemini-obsidian) de [thoreinstein](https://github.com/thoreinstein)
-- Adaptado y extendido para Opencode
+- Inspirado en [gemini-obsidian](https://github.com/thoreinstein/gemini-obsidian)
 - Tecnologías: LanceDB, Transformers.js, MCP
 
 ## 📄 Licencia
 
 ISC - Libre para usar, modificar y distribuir
-
----
-
-**¿Listo? Empieza con:** `>oo cap "Mi primera nota"`

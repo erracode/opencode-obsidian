@@ -1,205 +1,209 @@
 # 🚀 Guía de Inicio Rápido - opencode-obsidian
 
-## Instalación (5 minutos)
+## Instalación (3 pasos)
 
-### Opción 1: Instalador Automático (Windows)
-
-1. Descarga el repo
-2. Ejecuta `install.bat`
-3. Sigue las instrucciones
-4. Agrega la configuración MCP a tu `opencode.json`
-5. Reinicia opencode
-
-### Opción 2: Manual
+### 1. Clonar y compilar
 
 ```bash
-# 1. Entrar al directorio
+git clone https://github.com/erracode/opencode-obsidian.git
 cd opencode-obsidian/mcp-server
-
-# 2. Instalar dependencias
 npm install
-
-# 3. Compilar
 npm run build
-
-# 4. Configurar variable de entorno
-setx OBSIDIAN_VAULT_PATH "C:\ruta\a\tu\vault"
-
-# 5. Agregar a opencode.json
-{
-  "mcp": {
-    "opencode-obsidian": {
-      "command": ["node", "C:/ruta/a/opencode-obsidian/mcp-server/dist/index.js"],
-      "enabled": true
-    }
-  }
-}
-
-# 6. Instalar skill
-mklink /d %USERPROFILE%\.config\opencode\skills\opencode-obsidian C:\ruta\a\skill-opencode-obsidian
+npm link
 ```
+
+### 2. Configurar con wizard
+
+```bash
+oo-setup setup
+```
+
+El wizard:
+- ✅ Detecta vaults de Obsidian existentes
+- ✅ Crea estructura de carpetas necesaria
+- ✅ Configura Azure DevOps (opcional)
+- ✅ Valida conexión
+
+### 3. Reiniciar opencode
+
+Cierra y vuelve a abrir opencode.
+
+---
+
+## Verificar Instalación
+
+```bash
+oo-setup status
+```
+
+Deberías ver:
+```
+📊 opencode-obsidian - Estado
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 Vault: C:/Users/.../Obsidian Vault
+   Notas: 48 archivos
+
+🔗 Azure: cinemarkintl/Core Backend
+   PAT: ****4eG6
+   Estado: ✅ Válido
+
+📊 RAG: ⚠️ No indexado
+```
+
+---
 
 ## Primeros Pasos
 
-### 1. Verificar instalación
-```
->oo help
-```
-Debería mostrar la lista de comandos disponibles.
+### 1. Indexar vault para RAG
 
-### 2. Ver templates
-```
->oo tpl
-```
-Debería mostrar los 7 templates disponibles.
-
-### 3. Indexar tu vault (para RAG)
 ```
 >oo idx
 ```
-Esto indexa todas tus notas para búsqueda semántica.
 
-### 4. Capturar tu primera nota
+### 2. Capturar primera nota
+
 ```
->oo cap "Tengo que revisar el bug 28416 en el gateway de pagos"
+>oo cap "Tengo que revisar el bug 28416 en el gateway"
 ```
+
+Esto crea automáticamente:
+- `proyectos/28416-context.md`
+- `tracking/28416.md`
+
+### 3. Ver templates disponibles
+
+```
+>oo tpl
+```
+
+---
 
 ## Comandos Esenciales
 
-### 📥 Captura y Gestión
+### 📥 Captura
+
 ```
 >oo cap "texto"              # Capturar nota rápida
->oo cap -f archivo.txt       # Capturar desde archivo
->oo deploy "git tags"        # Registrar deploy (valida Azure ID)
->oo task 28416               # Ver tracker de tarea
->oo task 28416 status "🟢 PROD" tag v2.8.3  # Actualizar tarea
+>oo cap "Implementar 28999"  # Con Azure ID detectado
 ```
 
-### 📊 Daily y Resúmenes
+### 📊 Tracking
+
+```
+>oo task 28416               # Ver estado
+>oo task 28416 status "🟢 PROD" tag v2.8.3  # Actualizar
+```
+
+### 📅 Daily
+
 ```
 >oo daily                    # Resumen de ayer
->oo daily date "2024-02-01"  # Resumen de fecha específica
+>oo daily date "2026-02-01"  # Fecha específica
 ```
 
 ### 🔍 Búsqueda
-```
->oo find "comando docker"    # Búsqueda simple
->oo ask "cómo solucioné el error 403"  # Búsqueda semántica (RAG)
-```
-
-### 🛠️ Utilidades
-```
->oo idx                      # Indexar vault para RAG
->oo tpl                      # Listar templates
->oo read "ruta/nota.md"      # Leer nota específica
->oo deploys                  # Listar deploy tags
-```
-
-## Flujos de Trabajo Comunes
-
-### Flujo 1: Nueva Tarea de Azure
-```
->oo cap "Tengo que implementar la feature 28999 para exportar reportes"
-→ Genera automáticamente:
-   - entregas/28999-...
-   - tracking/28999.md
-   - proyectos/28999-context.md
-```
-
-### Flujo 2: Registrar Deploy
-```
->oo deploy "git tag -a v2.8.3 -m '28999 fix report export'"
-→ Valida que tenga Azure ID
-→ Actualiza tracker 28999 a PROD
-→ Cambia estado a 🟢 PROD
-```
-
-### Flujo 3: Daily Standup
-```
->oo daily
-→ Analiza todas las notas de ayer
-→ Detecta tareas completadas
-→ Muestra deploys realizados
-→ Lista aprendizajes
-```
-
-### Flujo 4: Buscar Información
-```
->oo ask "qué comandos útiles tengo sobre docker"
-→ Busca semánticamente en todas las notas
-→ Encuentra recursos relacionados
-```
-
-## Estructura del Vault
 
 ```
-vault/
-├── inbox/           # Notas rápidas (brain dump)
-├── entregas/        # Templates Azure terminados
-├── tracking/        # Seguimiento de tareas
-├── daily/           # Daily notes
-├── recursos/        # Comandos, snippets, aprendizajes
-├── proyectos/       # Contextos para IA
-└── templates/       # Templates personalizados
+>oo find "docker"            # Búsqueda simple
+>oo ask "cómo solucioné el error 403"  # RAG semántico
 ```
+
+---
+
+## Flujo de Trabajo Típico
+
+```
+┌─────────────────────────────────────────────────────┐
+│  1. Capturar idea                                   │
+│     >oo cap "Implementar feature 28999"            │
+│                                                     │
+│  2. Trabajar en la tarea                            │
+│     ...                                             │
+│                                                     │
+│  3. Actualizar estado                               │
+│     >oo task 28999 status "🟡 STG"                  │
+│                                                     │
+│  4. Deploy                                          │
+│     git tag -a v2.8.3 -m "28999 feat: PDF export"  │
+│     >oo cap "git tag..."                            │
+│                                                     │
+│  5. Daily standup                                   │
+│     >oo daily                                       │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Detección Automática
+
+El sistema detecta automáticamente:
+
+| Patrón | Ejemplo | Acción |
+|--------|---------|--------|
+| Azure ID | `28416` | Crea tracker + entrega |
+| Git tag | `git tag -a v2.8.3 -m "28416..."` | Actualiza tracker a PROD |
+| Repositorio | `CKC-API-GATEWAY` | Tag para búsqueda |
+| Comando técnico | `docker ps` | Guarda en recursos/ |
+
+---
+
+## Configuración
+
+### Ver configuración actual
+
+```bash
+oo-setup status
+```
+
+### Modificar configuración
+
+```bash
+oo-setup config --vault "C:/nueva/ruta"
+oo-setup config --org mi-organizacion
+oo-setup config --project "Mi Proyecto"
+```
+
+### Archivos de configuración
+
+| Archivo | Ubicación |
+|---------|-----------|
+| Config principal | `~/.config/opencode-obsidian/config.json` |
+| Azure PAT | `.env.local` en el proyecto |
+| RAG index | `~/.local/share/opencode-obsidian/lancedb/` |
+
+---
 
 ## Tips
 
-1. **Siempre usa Azure ID** en los mensajes de git tags: `git tag -a v2.8.3 -m "28416 fix"`
-2. **Indexa regularmente** si agregas muchas notas: `>oo idx`
-3. **Sé específico** en tus preguntas al usar `>oo ask`
-4. **Los templates** se generan automáticamente, solo llénalos
+1. **Indexa regularmente** si agregas muchas notas: `>oo idx`
+2. **Sé específico** en `>oo ask` para mejores resultados
+3. **Usa Azure IDs** en mensajes de git tags para actualización automática
+4. **Ejecuta `oo-setup status`** para diagnosticar problemas
+
+---
 
 ## Solución de Problemas
 
 ### Error: "Vault path is not set"
-**Solución**: Ejecuta `obsidian_set_vault` con la ruta de tu vault
-
-### Error: "Configuration is invalid"
-**Solución**: Verifica que tu `opencode.json` tenga el formato correcto (usa array para command)
-
-### Error: "El índice no existe"
-**Solución**: Ejecuta `>oo idx` primero antes de usar `>oo ask`
-
-### Los comandos no aparecen
-**Solución**: Reinicia opencode completamente
-
-## Ejemplos Reales
-
-### Ejemplo 1: Bug en Producción
-```
->oo cap "URGENTE: Error 500 en el endpoint de pagos afectando usuarios"
-→ Genera entrega para reportar
-→ Crea tracker con prioridad alta
+```bash
+oo-setup setup
 ```
 
-### Ejemplo 2: Aprender algo nuevo
-```
->oo cap "Comando útil: docker-compose logs -f --tail=100 nombre_servicio"
-→ Guarda en recursos/
-→ Disponible para búsqueda después
-```
+### Error: "Azure PAT inválido"
+```bash
+# Verificar estado
+oo-setup status
 
-### Ejemplo 3: Preparar Daily
-```
->oo daily
-→ Revisa qué hiciste ayer
-→ Prepara tu standup en 10 segundos
+# Actualizar PAT en .env.local
+AZURE_PAT=nuevo_pat_aqui
 ```
 
-## Soporte
+### Error: "RAG no funciona"
+```
+>oo idx
+```
 
-Si tienes problemas:
-1. Verifica que Node.js esté instalado: `node --version`
-2. Revisa que el build existe: `mcp-server/dist/index.js`
-3. Confirma la configuración en `opencode.json`
-4. Reinicia opencode
-
-## Próximos Pasos
-
-1. ✅ Comienza a capturar tus notas
-2. ✅ Indexa tu vault: `>oo idx`
-3. ✅ Prueba el daily: `>oo daily`
-4. ✅ Experimenta con RAG: `>oo ask`
+---
 
 **¡Listo! Ahora tienes un second brain funcional.** 🧠

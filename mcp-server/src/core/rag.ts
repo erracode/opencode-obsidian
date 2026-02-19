@@ -34,7 +34,7 @@ export class VaultSearch {
     // En Windows: C:\Users\Usuario\.opencode-obsidian\lancedb
     // En Unix: ~/.opencode-obsidian/lancedb
     const homeDir = process.env.HOME || process.env.USERPROFILE || '.';
-    this.dbPath = path.join(homeDir, '.opencode-obsidian', 'lancedb');
+    this.dbPath = path.join(homeDir, '.local', 'share', 'opencode-obsidian', 'lancedb');
   }
 
   /**
