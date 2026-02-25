@@ -32,15 +32,23 @@ async function exists(p: string): Promise<boolean> {
 }
 
 export async function loadConfig(): Promise<AppConfig | null> {
+  // Intentar nueva ubicación
   if (await exists(CONFIG_FILE)) {
     const data = await fs.readFile(CONFIG_FILE, 'utf-8');
-    return JSON.parse(data);
+    const config = JSON.parse(data);
+    // Actualizar lastAccessed
+    if (config.vault) {
+      config.vault.lastAccessed = new Date().toISOString();
+    }
+    return config;
   }
   
+  // Intentar migrar desde legacy
   if (await exists(LEGACY_CONFIG_FILE)) {
     const legacy = await fs.readFile(LEGACY_CONFIG_FILE, 'utf-8');
     const legacyData = JSON.parse(legacy);
     
+    // Crear nueva estructura
     const newConfig: AppConfig = {
       version: '1.0.0',
       vault: {
@@ -55,6 +63,7 @@ export async function loadConfig(): Promise<AppConfig | null> {
     
     await saveConfig(newConfig);
     
+    // Backup del archivo legacy
     await fs.rename(LEGACY_CONFIG_FILE, LEGACY_CONFIG_FILE + '.backup');
     
     return newConfig;

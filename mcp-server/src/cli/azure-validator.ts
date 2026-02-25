@@ -5,8 +5,13 @@ export interface AzureValidationResult {
   organization?: string;
   project?: string;
   error?: string;
+  hasWorkItemsAccess?: boolean;
 }
 
+/**
+ * Valida el PAT de Azure DevOps
+ * Verifica acceso al proyecto y permisos de Work Items
+ */
 export async function validateAzurePAT(
   pat: string,
   organization: string,
@@ -15,7 +20,8 @@ export async function validateAzurePAT(
   try {
     const encodedPat = Buffer.from(`:${pat}`).toString('base64');
     
-    const response = await axios.get(
+    // 1. Verificar acceso al proyecto
+    const projectResponse = await axios.get(
       `https://dev.azure.com/${organization}/_apis/projects/${encodeURIComponent(project)}?api-version=7.1`,
       {
         headers: {
@@ -25,10 +31,41 @@ export async function validateAzurePAT(
       }
     );
     
+    // 2. Verificar acceso a Work Items (WIQL simple query)
+    let hasWorkItemsAccess = false;
+    try {
+      await axios.post(
+        `https://dev.azure.com/${organization}/${encodeURIComponent(project)}/_apis/wit/wiql?api-version=7.1`,
+        {
+          query: "SELECT [System.Id] FROM WorkItems WHERE [System.Id] = 0"
+        },
+        {
+          headers: {
+            'Authorization': `Basic ${encodedPat}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        }
+      );
+      hasWorkItemsAccess = true;
+    } catch (wiqlError: unknown) {
+      const wiqlErr = wiqlError as { response?: { status?: number } };
+      if (wiqlErr.response?.status === 401) {
+        return {
+          valid: true,
+          organization,
+          project: projectResponse.data.name,
+          hasWorkItemsAccess: false,
+          error: 'PAT sin permisos para Work Items. Necesitas scope "Work Items (Read & Write)"'
+        };
+      }
+    }
+    
     return {
       valid: true,
       organization,
-      project: response.data.name
+      project: projectResponse.data.name,
+      hasWorkItemsAccess
     };
     
   } catch (error: unknown) {

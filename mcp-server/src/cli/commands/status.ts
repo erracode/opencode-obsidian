@@ -1,14 +1,17 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as os from 'os';
-import { loadConfig, getDataDir } from '../../core/config.js';
+import { loadConfig, getDataDir, type AppConfig } from '../../core/config.js';
 import { closePrompt } from '../prompts.js';
 import { validateAzurePAT } from '../azure-validator.js';
 import { glob } from 'glob';
 
 async function countNotes(vaultPath: string): Promise<number> {
-  const files = await glob('**/*.md', { cwd: vaultPath });
-  return files.length;
+  try {
+    const files = await glob('**/*.md', { cwd: vaultPath });
+    return files.length;
+  } catch {
+    return 0;
+  }
 }
 
 function formatDate(isoString: string): string {
@@ -34,17 +37,21 @@ export async function statusCommand(): Promise<void> {
     return;
   }
   
+  // Vault
   console.log('📁 Vault');
   console.log(`   Ruta: ${config.vault.path}`);
   
   try {
     const notes = await countNotes(config.vault.path);
     console.log(`   Notas: ${notes} archivos`);
-    console.log(`   Último acceso: ${formatDate(config.vault.lastAccessed)}`);
+    if (config.vault.lastAccessed) {
+      console.log(`   Último acceso: ${formatDate(config.vault.lastAccessed)}`);
+    }
   } catch {
     console.log('   ⚠️  No accesible');
   }
   
+  // Azure
   console.log('\n🔗 Azure DevOps');
   console.log(`   Organización: ${config.azure.organization}`);
   console.log(`   Proyecto: ${config.azure.project}`);
@@ -55,14 +62,21 @@ export async function statusCommand(): Promise<void> {
     
     const validation = await validateAzurePAT(pat, config.azure.organization, config.azure.project);
     if (validation.valid) {
-      console.log('   Estado: ✅ Válido');
+      if (validation.hasWorkItemsAccess) {
+        console.log('   Estado: ✅ Válido (con acceso a Work Items)');
+      } else {
+        console.log('   Estado: ⚠️ Válido pero sin acceso a Work Items');
+        console.log('   El PAT necesita scope "Work Items (Read & Write)"');
+      }
     } else {
       console.log(`   Estado: ❌ ${validation.error}`);
     }
   } else {
     console.log('   PAT: ⚠️  No configurado');
+    console.log('   Crea .env.local con AZURE_PAT');
   }
   
+  // Templates
   console.log('\n📚 Templates');
   try {
     const templatesPath = path.join(config.vault.path, 'templates');
@@ -75,6 +89,7 @@ export async function statusCommand(): Promise<void> {
     console.log('   ⚠️  Sin templates');
   }
   
+  // RAG
   console.log('\n📊 RAG');
   const ragPath = path.join(getDataDir(), 'lancedb');
   try {
@@ -86,6 +101,7 @@ export async function statusCommand(): Promise<void> {
     console.log('   Ejecuta: >oo idx');
   }
   
+  // Config
   console.log('\n🔌 Configuración');
   console.log(`   Archivo: ~/.config/opencode-obsidian/config.json`);
   console.log(`   Versión: ${config.version}`);
