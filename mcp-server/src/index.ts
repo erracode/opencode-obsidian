@@ -863,6 +863,61 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
             type: 'object',
             properties: {}
           }
+        },
+        // Azure shortcuts
+        {
+          name: '>oo_azure',
+          description: 'Azure - Get my assigned work items from Azure DevOps',
+          inputSchema: {
+            type: 'object',
+            properties: {}
+          }
+        },
+        {
+          name: '>oo_deliver',
+          description: 'Deliver - Prepare delivery document for Azure work item',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28999)' }
+            },
+            required: ['azure_id']
+          }
+        },
+        {
+          name: '>oo_comment',
+          description: 'Comment - Publish delivery comment to Azure and mark as Resolved',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28999)' }
+            },
+            required: ['azure_id']
+          }
+        },
+        {
+          name: '>oo_subtask',
+          description: 'Subtask - Create DEV task as child of User Story',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              parent_id: { type: 'number', description: 'Parent User Story ID (e.g., 28618)' },
+              effort: { type: 'number', description: 'Optional: Estimated hours' }
+            },
+            required: ['parent_id']
+          }
+        },
+        {
+          name: '>oo_hours',
+          description: 'Hours - Update completed hours on Azure work item',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28999)' },
+              hours: { type: 'number', description: 'Hours completed' }
+            },
+            required: ['azure_id', 'hours']
+          }
         }
       ]
     };
@@ -979,75 +1034,59 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           const helpText = `📚 opencode-obsidian - Comandos Disponibles
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 ESTADO Y CONFIGURACIÓN
-  >oo status          Ver configuración y estado actual
+📊 ESTADO
+  >oo status          Ver configuración actual
   >oo help            Mostrar esta ayuda
 
-📝 CAPTURA Y NOTAS
-  >oo cap "texto"     Capturar nota (detecta Azure IDs, git tags)
-  >oo cap -f <file>   Capturar desde archivo
+📝 NOTAS
+  >oo cap "texto"     Capturar nota
   >oo find "query"    Buscar en vault
-  >oo read "path"     Leer nota específica
-  >oo task <id>       Ver/actualizar tracker de tarea
+  >oo task <id>       Ver/actualizar tracker
+  >oo read "path"     Leer nota
 
-📅 DAILY Y RESÚMENES
-  >oo daily           Resumen de ayer para standup
-  >oo daily date "2026-02-01"  Resumen de fecha específica
+📅 DAILY
+  >oo daily           Resumen de ayer
 
-🔍 BÚSQUEDA Y RAG
-  >oo idx             Indexar vault para búsqueda semántica
-  >oo ask "pregunta"  Preguntar al vault con IA (RAG)
+🔍 RAG
+  >oo idx             Indexar vault
+  >oo ask "pregunta"  Preguntar con IA
 
 📋 TEMPLATES
-  >oo tpl             Listar templates disponibles
-  >oo create <template> <id>  Crear nota desde template
+  >oo tpl             Listar templates
+  >oo create <tpl> <id>  Crear desde template
 
 🚀 DEPLOYS
-  >oo deploy "git tag -a vX -m '28xxx msg'"  Registrar deploy
-  >oo deploys         Listar deploys realizados
+  >oo deploy "git tag..."  Registrar deploy
+  >oo deploys         Listar deploys
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔗 AZURE DEVOPS
-  azure_get_my_assignments     Ver mis tareas asignadas
-  azure_prepare_delivery 28999 Preparar documento de entrega
-  azure_publish_comment 28999  Publicar comentario y resolver
-  azure_create_dev_task 28618  Crear tarea DEV hija de HU
-  azure_update_hours 28999 4   Actualizar horas trabajadas
-  azure_test_connection        Validar conexión y PAT
+🔗 AZURE DEVOPS (comandos cortos)
+  >oo azure           Ver mis tareas asignadas
+  >oo deliver 28999   Preparar documento de entrega
+  >oo comment 28999   Publicar y resolver
+  >oo subtask 28618   Crear tarea DEV hija
+  >oo hours 28999 4   Actualizar horas
 
 📌 FLUJO AZURE TÍPICO:
-  1. azure_get_my_assignments          → Ver tareas
-  2. azure_prepare_delivery 28999      → Generar entrega
-  3. (Editar documento en Obsidian)
-  4. azure_publish_comment 28999       → Publicar y resolver
+  1. >oo azure              → Ver tareas
+  2. >oo deliver 28999      → Generar entrega
+  3. (Editar en Obsidian)
+  4. >oo comment 28999      → Publicar y resolver
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 EJEMPLOS RÁPIDOS:
-
-  # Capturar nota con Azure ID
-  >oo cap "Implementar feature 28999 para exportar PDF"
-
-  # Ver tareas de Azure
-  azure_get_my_assignments
-
-  # Preparar entrega
-  azure_prepare_delivery azure_id: 28999
-
-  # Daily standup
+💡 EJEMPLOS:
+  >oo cap "Implementar feature 28999"
+  >oo azure
+  >oo deliver 28999
   >oo daily
-
-  # Buscar con IA
-  >oo ask "cómo solucioné el error del OTP"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  >oo ask "cómo solucioné el error OTP"
 
 ⚠️  TIPS:
-  • Usa Azure IDs (28xxx) para generar trackers automáticamente
-  • Los git tags deben incluir Azure ID: git tag -a vX -m "28416 fix"
-  • Indexa con >oo idx antes de usar >oo ask
-  • Ejecuta >oo status para verificar configuración`;
+  • Usa Azure IDs (28xxx) en notas y git tags
+  • Indexa con >oo idx antes de >oo ask
+  • Ejecuta >oo status para verificar config`;
 
           return {
             content: [{ type: 'text', text: helpText }]
@@ -1331,6 +1370,64 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
           
           return {
             content: [{ type: 'text', text: status }]
+          };
+        }
+
+        // Azure shortcuts
+        case '>oo_azure': {
+          const result = await handleAzureGetAssignments();
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case '>oo_deliver': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp || !templateEngine) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const result = await handleAzurePrepareDelivery(azureId, vp, vaultManager!, templateEngine!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case '>oo_comment': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const result = await handleAzurePublishComment(azureId, vp, vaultManager!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case '>oo_subtask': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp || !templateEngine) {
+            await initializeVault(vp);
+          }
+          const parentId = Number(args?.parent_id);
+          const effort = args?.effort ? Number(args?.effort) : undefined;
+          const result = await handleAzureCreateDevTask(parentId, effort, vp, vaultManager!, templateEngine!);
+          return {
+            content: [{ type: 'text', text: result }]
+          };
+        }
+
+        case '>oo_hours': {
+          const vp = getVaultPath(args?.vault_path as string);
+          if (!vaultManager || vaultManager.getVaultPath() !== vp) {
+            await initializeVault(vp);
+          }
+          const azureId = Number(args?.azure_id);
+          const completed = Number(args?.hours);
+          const result = await handleAzureUpdateHours(azureId, completed, vp, vaultManager!);
+          return {
+            content: [{ type: 'text', text: result }]
           };
         }
 
