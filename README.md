@@ -14,7 +14,17 @@ npm run build
 npm link
 ```
 
-### 2. Configurar
+### 2. Configurar Azure PAT
+
+Crear archivo `.env.local` en `opencode-obsidian/mcp-server/`:
+
+```bash
+AZURE_PAT=tu_personal_access_token
+AZURE_ORG=cinemarkintl
+AZURE_PROJECT=Core Backend
+```
+
+### 3. Ejecutar setup
 
 ```bash
 oo-setup setup
@@ -23,11 +33,9 @@ oo-setup setup
 El wizard te guiará para:
 - Detectar vaults de Obsidian existentes
 - Crear estructura de carpetas necesaria
-- Configurar Azure DevOps (opcional)
+- Validar conexión Azure
 
-### 3. Reiniciar opencode
-
-Cierra y vuelve a abrir opencode.
+### 4. Reiniciar opencode
 
 **Verifica la instalación:**
 ```
@@ -40,33 +48,47 @@ Cierra y vuelve a abrir opencode.
 
 | Comando | Descripción |
 |---------|-------------|
-| `oo-setup setup` | Wizard de configuración interactivo |
-| `oo-setup status` | Ver estado actual del sistema |
+| `oo-setup setup` | Wizard de configuración |
+| `oo-setup status` | Ver estado actual |
 | `oo-setup config` | Modificar configuración |
-
-**Ejemplos:**
-```bash
-oo-setup setup                              # Configurar todo
-oo-setup status                             # Ver estado
-oo-setup config --vault "C:/ruta/al/vault"  # Cambiar vault
-oo-setup config --org mi-organizacion       # Cambiar org Azure
-```
 
 ---
 
 ## 📋 Comandos MCP (>oo)
 
-| Comando | Descripción | Ejemplo |
-|---------|-------------|---------|
-| `>oo status` | Ver configuración actual | `>oo status` |
-| `>oo cap` | Capturar nota | `>oo cap "Tengo que revisar bug 28416"` |
-| `>oo find` | Buscar en vault | `>oo find "error 403"` |
-| `>oo task` | Ver/actualizar tarea | `>oo task 28416` |
-| `>oo daily` | Resumen del día | `>oo daily` |
-| `>oo tpl` | Listar templates | `>oo tpl` |
-| `>oo idx` | Indexar para RAG | `>oo idx` |
-| `>oo ask` | Preguntar al vault | `>oo ask "cómo solucioné el error"` |
-| `>oo help` | Mostrar ayuda | `>oo help` |
+### Estado y Notas
+
+| Comando | Descripción |
+|---------|-------------|
+| `>oo status` | Ver configuración actual |
+| `>oo help` | Mostrar ayuda completa |
+| `>oo cap "texto"` | Capturar nota |
+| `>oo find "query"` | Buscar en vault |
+| `>oo task <id>` | Ver/actualizar tarea |
+| `>oo daily` | Resumen del día |
+| `>oo idx` | Indexar para RAG |
+| `>oo ask "pregunta"` | Preguntar al vault |
+
+### Azure DevOps
+
+| Comando | Descripción |
+|---------|-------------|
+| `>oo azure` | Ver mis tareas asignadas |
+| `>oo deliver 28999` | Preparar documento de entrega |
+| `>oo comment 28999` | Publicar comentario y resolver |
+| `>oo subtask 28618` | Crear tarea DEV hija |
+| `>oo hours 28999 4` | Actualizar horas trabajadas |
+
+---
+
+## 📌 Flujo Azure Típico
+
+```
+1. >oo azure              → Ver tareas asignadas
+2. >oo deliver 28999      → Preparar documento de entrega
+3. (Editar documento en Obsidian)
+4. >oo comment 28999      → Publicar y resolver
+```
 
 ---
 
@@ -85,32 +107,17 @@ vault/
 
 ---
 
-## 📁 Estructura de Configuración (XDG)
+## 📁 Estructura de Configuración
 
 ```
+opencode-obsidian/mcp-server/
+├── .env.local           # Azure PAT (IMPORTANTE)
+
 ~/.config/opencode-obsidian/
-├── config.json      # Configuración principal
+├── config.json          # Configuración principal
 
 ~/.local/share/opencode-obsidian/
-├── lancedb/         # Índice RAG
-```
-
----
-
-## 🔗 Integración con Azure DevOps
-
-El sistema se integra con Azure DevOps para:
-- Ver tareas asignadas
-- Preparar documentos de entrega
-- Actualizar horas de trabajo
-- Publicar comentarios
-
-Configura Azure DevOps durante `oo-setup setup` o edita `.env.local`:
-
-```bash
-AZURE_PAT=tu_pat_aqui
-AZURE_ORG=tu_organizacion
-AZURE_PROJECT=tu_proyecto
+├── lancedb/             # Índice RAG
 ```
 
 ---
@@ -122,24 +129,24 @@ AZURE_PROJECT=tu_proyecto
 3. **Selecciona tu vault**
 4. **¡Listo!**
 
-Las notas se sincronizan automáticamente.
-
 ---
 
 ## 🛠️ Solución de Problemas
 
-### "Comandos no aparecen"
-→ Reinicia opencode completamente
-
-### "Vault path is not set"
-→ Ejecuta `oo-setup setup`
-
 ### "Azure PAT inválido"
-→ Ejecuta `oo-setup status` para diagnosticar
-→ Actualiza `.env.local` con PAT válido
+```bash
+# Verificar estado
+oo-setup status
+
+# El .env.local debe estar en:
+opencode-obsidian/mcp-server/.env.local
+```
+
+### "Comandos no aparecen"
+→ Reinicia opencode
 
 ### "RAG no funciona"
-→ Ejecuta `>oo idx` para indexar el vault
+→ Ejecuta `>oo idx`
 
 ---
 

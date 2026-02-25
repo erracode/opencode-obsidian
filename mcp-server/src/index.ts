@@ -1,4 +1,14 @@
 #!/usr/bin/env node
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as os from 'os';
+
+// Cargar .env.local - buscar en múltiples ubicaciones
+const packageDir = path.dirname(path.dirname(process.argv[1]));
+dotenv.config({ path: path.resolve(packageDir, '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(os.homedir(), '.config', 'opencode-obsidian', '.env.local') });
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -8,8 +18,6 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as os from 'os';
 import { VaultManager } from './core/vault.js';
 import { TemplateEngine } from './core/template-engine.js';
 import { ContentDetector } from './core/detector.js';
