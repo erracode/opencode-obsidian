@@ -4,8 +4,16 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as os from 'os';
 
-dotenv.config({ path: path.resolve(os.homedir(), '.config', 'opencode-obsidian', '.env.local') });
+// Buscar .env.local en orden de prioridad:
+// 1. Directorio del paquete (donde está package.json)
+const packageDir = path.dirname(path.dirname(process.argv[1]));
+dotenv.config({ path: path.resolve(packageDir, '.env.local') });
+
+// 2. Directorio actual (por si se ejecuta desde el proyecto)
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+// 3. XDG config dir (fallback)
+dotenv.config({ path: path.resolve(os.homedir(), '.config', 'opencode-obsidian', '.env.local') });
 
 import { setupCommand } from './cli/commands/setup.js';
 import { statusCommand } from './cli/commands/status.js';

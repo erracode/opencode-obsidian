@@ -977,43 +977,77 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
         // COMANDOS CORTOS
         case '>oo_help': {
           const helpText = `📚 opencode-obsidian - Comandos Disponibles
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Comandos Disponibles:
-  >oo help            Muestra esta ayuda
-  >oo cap <texto>     Capture - Capturar nota
-  >oo cap -f <file>   Capture desde archivo
-  >oo find <query>    Find - Buscar en vault
-  >oo read <path>     Read - Leer nota específica
-  >oo task <id>       Task - Ver/actualizar tarea
-  >oo daily           Daily - Resumen del día
-  >oo tpl             Templates - Listar templates
-  >oo idx             Index - Indexar vault
-  >oo ask <pregunta>  Ask - Preguntar al vault (RAG)
-  >oo deploy <tags>   Deploy - Registrar deploy tags
-  >oo deploys         Deploys - Listar deploy tags
+📊 ESTADO Y CONFIGURACIÓN
+  >oo status          Ver configuración y estado actual
+  >oo help            Mostrar esta ayuda
 
-Ejemplos:
-  >oo help                                    # Mostrar esta ayuda
-  >oo cap "Tengo que revisar bug 28416"       # Capturar nota con Azure ID
-  >oo cap -f meeting_notes.txt                # Capturar desde archivo
-  >oo find "error 403"                       # Buscar en vault
-  >oo read "tracking/28416.md"               # Leer nota específica
-  >oo task 28416                              # Ver estado tarea
-  >oo task 28416 status "🟢 PROD"              # Actualizar tarea
-  >oo daily                                   # Resumen de ayer
-  >oo tpl                                     # Listar templates
-  >oo idx                                     # Indexar vault (primera vez)
-  >oo ask "cómo solucioné el error del OTP"    # Preguntar al vault con IA
-  >oo deploy "git tag -a v2.8.3 -m '28416 fix'" # Registrar deploy
-  >oo deploys                                 # Listar deploys realizados
-  >oo create "bitbucket-pr-standard" 28620    # Crear template PR para tarea
+📝 CAPTURA Y NOTAS
+  >oo cap "texto"     Capturar nota (detecta Azure IDs, git tags)
+  >oo cap -f <file>   Capturar desde archivo
+  >oo find "query"    Buscar en vault
+  >oo read "path"     Leer nota específica
+  >oo task <id>       Ver/actualizar tracker de tarea
 
-💡 Tips:
-- Usa Azure IDs (28xxx) para generar trackers automáticamente
-- El sistema detecta git tags y valida Azure IDs
-- Indexa con >oo idx antes de usar >oo ask
-- Las notas se organizan automáticamente en carpetas
-- Usa >oo create para generar templates rápidamente`;
+📅 DAILY Y RESÚMENES
+  >oo daily           Resumen de ayer para standup
+  >oo daily date "2026-02-01"  Resumen de fecha específica
+
+🔍 BÚSQUEDA Y RAG
+  >oo idx             Indexar vault para búsqueda semántica
+  >oo ask "pregunta"  Preguntar al vault con IA (RAG)
+
+📋 TEMPLATES
+  >oo tpl             Listar templates disponibles
+  >oo create <template> <id>  Crear nota desde template
+
+🚀 DEPLOYS
+  >oo deploy "git tag -a vX -m '28xxx msg'"  Registrar deploy
+  >oo deploys         Listar deploys realizados
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 AZURE DEVOPS
+  azure_get_my_assignments     Ver mis tareas asignadas
+  azure_prepare_delivery 28999 Preparar documento de entrega
+  azure_publish_comment 28999  Publicar comentario y resolver
+  azure_create_dev_task 28618  Crear tarea DEV hija de HU
+  azure_update_hours 28999 4   Actualizar horas trabajadas
+  azure_test_connection        Validar conexión y PAT
+
+📌 FLUJO AZURE TÍPICO:
+  1. azure_get_my_assignments          → Ver tareas
+  2. azure_prepare_delivery 28999      → Generar entrega
+  3. (Editar documento en Obsidian)
+  4. azure_publish_comment 28999       → Publicar y resolver
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 EJEMPLOS RÁPIDOS:
+
+  # Capturar nota con Azure ID
+  >oo cap "Implementar feature 28999 para exportar PDF"
+
+  # Ver tareas de Azure
+  azure_get_my_assignments
+
+  # Preparar entrega
+  azure_prepare_delivery azure_id: 28999
+
+  # Daily standup
+  >oo daily
+
+  # Buscar con IA
+  >oo ask "cómo solucioné el error del OTP"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  TIPS:
+  • Usa Azure IDs (28xxx) para generar trackers automáticamente
+  • Los git tags deben incluir Azure ID: git tag -a vX -m "28416 fix"
+  • Indexa con >oo idx antes de usar >oo ask
+  • Ejecuta >oo status para verificar configuración`;
 
           return {
             content: [{ type: 'text', text: helpText }]
