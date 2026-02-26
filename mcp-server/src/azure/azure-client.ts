@@ -1,10 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
 import { rateLimiter, withRetry } from './rate-limiter.js';
-
-// Cargar variables de entorno
-dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 export interface WorkItem {
   id: number;
@@ -60,6 +55,8 @@ export class AzureDevOpsClient {
   private organization: string;
   private project: string;
   private apiVersion = '7.1';
+  private currentUserEmail: string | null = null;
+  private encodedPat: string;
 
   constructor() {
     const pat = process.env.AZURE_PAT;
@@ -75,19 +72,17 @@ export class AzureDevOpsClient {
       );
     }
 
-    // Codificar PAT en base64 (formato :{PAT})
-    const encodedPat = Buffer.from(`:${pat}`).toString('base64');
+    this.encodedPat = Buffer.from(`:${pat}`).toString('base64');
 
     this.client = axios.create({
       baseURL: `https://dev.azure.com/${this.organization}`,
       headers: {
-        'Authorization': `Basic ${encodedPat}`,
+        'Authorization': `Basic ${this.encodedPat}`,
         'Content-Type': 'application/json',
       },
       timeout: 30000,
     });
 
-    // Interceptor para logging de errores
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -104,9 +99,37 @@ export class AzureDevOpsClient {
   }
 
   /**
+   * Obtener email del usuario actual desde VSSPS API
+   * Nota: @Me en WIQL no funciona con PATs, por eso obtenemos el email directamente
+   */
+  async getCurrentUserEmail(): Promise<string> {
+    if (this.currentUserEmail) return this.currentUserEmail;
+
+    const response = await axios.get(
+      `https://vssps.dev.azure.com/${this.organization}/_apis/profile/profiles/me?api-version=7.1`,
+      {
+        headers: {
+          'Authorization': `Basic ${this.encodedPat}`,
+        },
+      }
+    );
+
+    const email = response.data.emailAddress as string;
+    
+    if (!email) {
+      throw new Error('No se pudo obtener el email del usuario desde Azure DevOps');
+    }
+    
+    this.currentUserEmail = email;
+    return this.currentUserEmail;
+  }
+
+  /**
    * Obtener work items asignados al usuario actual
+   * Usa CONTAINS con el email en lugar de @Me (que no funciona con PATs)
    */
   async getMyWorkItems(states: string[] = ['New', 'Active', 'Resolved']): Promise<WorkItem[]> {
+    const userEmail = await this.getCurrentUserEmail();
     const stateFilter = states.map(s => `[System.State] = '${s}'`).join(' OR ');
     
     const query = `
@@ -118,7 +141,7 @@ export class AzureDevOpsClient {
              [System.IterationPath], [System.ChangedDate]
       FROM workitems
       WHERE [System.TeamProject] = '${this.project}'
-        AND [System.AssignedTo] = @Me
+        AND [System.AssignedTo] CONTAINS '${userEmail}'
         AND (${stateFilter})
       ORDER BY [System.ChangedDate] DESC
     `;
@@ -129,7 +152,6 @@ export class AzureDevOpsClient {
       return [];
     }
 
-    // Obtener detalles de cada work item
     const workItemIds = result.workItems.map(wi => wi.id);
     return this.getWorkItemsBatch(workItemIds);
   }
@@ -168,30 +190,29 @@ export class AzureDevOpsClient {
 
   /**
    * Obtener múltiples work items
+   * Nota: Debe usar POST, no GET con body (causa 401)
    */
   async getWorkItemsBatch(ids: number[]): Promise<WorkItem[]> {
     if (ids.length === 0) return [];
     
     return this.requestWithRateLimit(async () => {
-      const response: AxiosResponse<{ value: WorkItem[] }> = await this.client.get(
+      const response: AxiosResponse<{ value: WorkItem[] }> = await this.client.post(
         `/${this.project}/_apis/wit/workitemsbatch?api-version=${this.apiVersion}`,
         {
-          data: {
-            ids: ids,
-            fields: [
-              'System.Id',
-              'System.Title',
-              'System.State',
-              'System.WorkItemType',
-              'System.AssignedTo',
-              'Microsoft.VSTS.Scheduling.Effort',
-              'Microsoft.VSTS.Scheduling.CompletedWork',
-              'Microsoft.VSTS.Scheduling.RemainingWork',
-              'System.IterationPath',
-              'System.ChangedDate',
-              'System.Description'
-            ]
-          }
+          ids: ids,
+          fields: [
+            'System.Id',
+            'System.Title',
+            'System.State',
+            'System.WorkItemType',
+            'System.AssignedTo',
+            'Microsoft.VSTS.Scheduling.Effort',
+            'Microsoft.VSTS.Scheduling.CompletedWork',
+            'Microsoft.VSTS.Scheduling.RemainingWork',
+            'System.IterationPath',
+            'System.ChangedDate',
+            'System.Description'
+          ]
         }
       );
       return response.data.value;
@@ -212,7 +233,6 @@ export class AzureDevOpsClient {
 
     if (!parentRelation) return null;
 
-    // Extraer ID del padre de la URL
     const parentId = parseInt(parentRelation.url.split('/').pop() || '0', 10);
     if (!parentId) return null;
 
@@ -378,7 +398,6 @@ export class AzureDevOpsClient {
    * Buscar Pull Requests relacionados a un work item
    */
   async findPullRequests(workItemId: number): Promise<any[]> {
-    // Primero necesitamos obtener los repositorios del proyecto
     const reposResponse: AxiosResponse<{ value: any[] }> = await this.client.get(
       `/${this.project}/_apis/git/repositories?api-version=${this.apiVersion}`
     );
@@ -391,17 +410,13 @@ export class AzureDevOpsClient {
           `/${this.project}/_apis/git/repositories/${repo.id}/pullrequests?api-version=${this.apiVersion}&searchCriteria.linkedWorkItems=true`
         );
 
-        // Filtrar PRs que estén vinculados al work item
         const linkedPRs = prResponse.data.value.filter(pr => {
-          // Verificar si el PR tiene el work item vinculado
-          // Esto puede variar según la estructura exacta de la API
           return pr.description?.includes(workItemId.toString()) || 
                  pr.title?.includes(workItemId.toString());
         });
 
         pullRequests.push(...linkedPRs);
       } catch (error) {
-        // Ignorar errores de repositorios individuales
         continue;
       }
     }
@@ -457,11 +472,12 @@ export class AzureDevOpsClient {
   }
 }
 
-// Lazy loading del cliente Azure para evitar errores al iniciar el MCP
 let azureClientInstance: AzureDevOpsClient | null = null;
 
 export function getAzureClient(): AzureDevOpsClient {
-  if (!azureClientInstance) {
+  const currentPat = process.env.AZURE_PAT;
+  
+  if (!azureClientInstance || !currentPat) {
     azureClientInstance = new AzureDevOpsClient();
   }
   return azureClientInstance;

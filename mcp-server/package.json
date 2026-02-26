@@ -10,7 +10,6 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
-    "test": "echo \"No tests specified\" && exit 0",
     "setup": "node dist/cli.js setup",
     "status": "node dist/cli.js status",
     "config": "node dist/cli.js config"

@@ -1,94 +1,103 @@
 # opencode-obsidian
 
-> Sistema inteligente de gestión de conocimiento que transforma notas desordenadas en entregables estructurados.
+Sistema de gestión de conocimiento que transforma notas en entregables estructurados con integración Azure DevOps y capacidades RAG locales.
 
-## 🚀 Instalación Rápida
+---
 
-### 1. Clonar y compilar
+## 🚀 Instalación Rápida (5 minutos)
+
+### Requisitos Previos
+- **Opencode** instalado: `npm install -g opencode`
+- **Node.js** 18+
+- **Git**
+
+### Instalación Completa
 
 ```bash
+# 1) Clonar el proyecto
 git clone https://github.com/erracode/opencode-obsidian.git
 cd opencode-obsidian/mcp-server
-npm install
-npm run build
-npm link
+
+# 2) Ejecutar setup (hace TODO automáticamente)
+npx oo-setup setup
 ```
 
-### 2. Configurar Azure PAT
+El setup automáticamente:
+- ✅ Verifica si opencode está instalado
+- ✅ Instala dependencias si faltan (`npm install`)
+- ✅ Compila el proyecto si hace falta (`npm run build`)
+- ✅ Configura el MCP en `opencode.json`
+- ✅ Detecta tu vault de Obsidian
+- ✅ Crea la estructura de carpetas
+- ✅ Copia los templates
+- ✅ Configura Azure DevOps (opcional)
 
-Crear archivo `.env.local` en `opencode-obsidian/mcp-server/`:
+### Después del Setup
 
 ```bash
-AZURE_PAT=tu_personal_access_token
-AZURE_ORG=cinemarkintl
-AZURE_PROJECT=Core Backend
-```
-
-### 3. Ejecutar setup
-
-```bash
-oo-setup setup
-```
-
-El wizard te guiará para:
-- Detectar vaults de Obsidian existentes
-- Crear estructura de carpetas necesaria
-- Validar conexión Azure
-
-### 4. Reiniciar opencode
-
-**Verifica la instalación:**
-```
+# Reinicia opencode completamente
+# Luego verifica que todo funciona:
 >oo status
+>oo azure    # si configuraste Azure
+>oo idx      # para RAG
 ```
 
 ---
 
-## 📋 Comandos CLI
+## 🔧 Instalación Manual (sin el wizard)
 
-| Comando | Descripción |
-|---------|-------------|
-| `oo-setup setup` | Wizard de configuración |
-| `oo-setup status` | Ver estado actual |
-| `oo-setup config` | Modificar configuración |
+Si prefieres hacer todo paso a paso:
+
+```bash
+# 1) Clonar
+git clone https://github.com/erracode/opencode-obsidian.git
+cd opencode-obsidian/mcp-server
+
+# 2) Instalar dependencias
+npm install
+
+# 3) Compilar
+npm run build
+
+# 4) Configurar MCP manualmente
+# Edita ~/.config/opencode/opencode.json y agrega:
+{
+  "mcp": {
+    "opencode-obsidian": {
+      "type": "local",
+      "command": ["node", "ruta/al/proyecto/mcp-server/dist/index.js"],
+      "enabled": true
+    }
+  }
+}
+
+# 5) Configurar Azure (opcional)
+# Crea mcp-server/.env.local:
+AZURE_PAT=tu_token
+AZURE_ORG=tu_org
+AZURE_PROJECT=tu_proyecto
+
+# 6) Setup del vault
+npx oo-setup setup
+
+# 7) Reiniciar opencode
+```
 
 ---
 
-## 📋 Comandos MCP (>oo)
-
-### Estado y Notas
+## 📋 Comandos
 
 | Comando | Descripción |
-|---------|-------------|
-| `>oo status` | Ver configuración actual |
-| `>oo help` | Mostrar ayuda completa |
+|--------|-------------|
+| `>oo help` | Mostrar comandos |
+| `>oo status` | Ver configuración |
 | `>oo cap "texto"` | Capturar nota |
-| `>oo find "query"` | Buscar en vault |
-| `>oo task <id>` | Ver/actualizar tarea |
-| `>oo daily` | Resumen del día |
-| `>oo idx` | Indexar para RAG |
-| `>oo ask "pregunta"` | Preguntar al vault |
-
-### Azure DevOps
-
-| Comando | Descripción |
-|---------|-------------|
-| `>oo azure` | Ver mis tareas asignadas |
-| `>oo deliver 28999` | Preparar documento de entrega |
-| `>oo comment 28999` | Publicar comentario y resolver |
-| `>oo subtask 28618` | Crear tarea DEV hija |
-| `>oo hours 28999 4` | Actualizar horas trabajadas |
-
----
-
-## 📌 Flujo Azure Típico
-
-```
-1. >oo azure              → Ver tareas asignadas
-2. >oo deliver 28999      → Preparar documento de entrega
-3. (Editar documento en Obsidian)
-4. >oo comment 28999      → Publicar y resolver
-```
+| `>oo find "query"` | Buscar vault |
+| `>oo daily` | Resumen daily |
+| `>oo azure` | Tareas Azure |
+| `>oo deliver <id>` | Preparar entrega |
+| `>oo comment <id>` | Publicar y resolver |
+| `>oo idx` | Indexar RAG |
 
 ---
 
@@ -96,72 +105,85 @@ El wizard te guiará para:
 
 ```
 vault/
-├── inbox/           # Notas capturadas
-├── entregas/        # Templates Azure terminados
-├── tracking/        # Seguimiento de tareas
-├── daily/           # Daily notes
-├── recursos/        # Comandos, snippets
-├── proyectos/       # Contextos para IA
-└── templates/       # Templates personalizados
+├── inbox/         # Notas capturadas
+├── entregas/     # Documentos de entrega
+├── tracking/     # Seguimiento tareas
+├── daily/        # Daily notes
+├── recursos/     # Comandos, snippets
+├── proyectos/    # Contexto IA
+└── templates/   # Templates
 ```
 
 ---
 
-## 📁 Estructura de Configuración
+## 📄 Templates
 
-```
-opencode-obsidian/mcp-server/
-├── .env.local           # Azure PAT (IMPORTANTE)
+| Template | Uso |
+|----------|-----|
+| `azure-delivery` | Entrega Azure |
+| `task-tracker` | Seguimiento |
+| `daily-standup` | Daily standup |
+| `bitbucket-pr-*` | PRs |
+| `ai-context` | Contexto IA |
 
-~/.config/opencode-obsidian/
-├── config.json          # Configuración principal
-
-~/.local/share/opencode-obsidian/
-├── lancedb/             # Índice RAG
-```
-
----
-
-## 🔗 Integración con Obsidian
-
-1. **Abre Obsidian**
-2. **"Abrir carpeta como vault"**
-3. **Selecciona tu vault**
-4. **¡Listo!**
+Uso: `>oo create <azure_id> <template>`
 
 ---
 
-## 🛠️ Solución de Problemas
+## ⚠️ Solución de Problemas
 
-### "Azure PAT inválido"
-```bash
-# Verificar estado
-oo-setup status
+**401 al obtener tareas Azure**
+→ PAT sin permisos. Scopes: Work Items Read/Write/Manage, Project and Team Read
 
-# El .env.local debe estar en:
-opencode-obsidian/mcp-server/.env.local
-```
+**Comandos no aparecen**
+→ Reiniciar opencode completamente
 
-### "Comandos no aparecen"
-→ Reinicia opencode
+**RAG no funciona**
+→ `>oo idx`
 
-### "RAG no funciona"
-→ Ejecuta `>oo idx`
+**MCP no carga**
+→ Verificar en `~/.config/opencode/opencode.json` que existe `opencode-obsidian`
 
 ---
 
-## 📚 Documentación
+## 🏗️ Arquitectura
 
-- **QUICKSTART.md** - Guía de inicio rápido
-- **CHEATSHEET.md** - Referencia de comandos
+```
+mcp-server/
+├── src/cli/       # CLI
+├── src/core/     # RAG, config, vault
+├── src/azure/    # Azure DevOps
+└── dist/        # Compilado
+```
+
+Tecnologías: LanceDB, Transformers.js, MCP SDK
+
+---
+
+## 📝 Changelog
+
+Ver [CHANGELOG.md](./CHANGELOG.md) para detalles.
+
+### v1.1.0
+- Comandos Azure: `>oo azure`, `>oo deliver`, `>oo comment`, `>oo subtask`, `>oo hours`
+- Setup wizard automático: `oo-setup` ahora hace todo
+- Prefijo `>oo` para comandos
+
+### v1.0.0
+- RAG con LanceDB
+- 7 templates
+- Integración Obsidian
 
 ---
 
 ## 🙏 Créditos
 
-- Inspirado en [gemini-obsidian](https://github.com/thoreinstein/gemini-obsidian)
-- Tecnologías: LanceDB, Transformers.js, MCP
+Inspirado en [gemini-obsidian](https://github.com/thoreinstein/gemini-obsidian)
+
+Tecnologías: LanceDB, Transformers.js, MCP SDK
+
+---
 
 ## 📄 Licencia
 
-ISC - Libre para usar, modificar y distribuir
+ISC

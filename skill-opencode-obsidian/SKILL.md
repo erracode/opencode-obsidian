@@ -1,206 +1,147 @@
 ---
 name: opencode-obsidian
-description: Comprehensive Obsidian vault integration with RAG, automatic organization, and custom templates. Use when working with an Obsidian vault for note-taking, task tracking, Azure DevOps integration, and document generation. Triggers on mentions of vault, notes, templates, Azure tasks, daily standups, and deploy tracking.
+description: Obsidian vault integration with RAG, note capture, templates, and Azure DevOps workflow. Use when working with vault notes, Azure tasks (28xxx IDs), daily standups, deploy tracking, or document generation. Triggers on mentions of vault, notes, templates, Azure tasks, daily standups, deploy tags, or >oo commands.
 ---
 
 # opencode-obsidian
 
-Sistema completo de gestión de conocimiento que transforma notas desordenadas en entregables estructurados.
-
-## Capacidades Principales
-
-### 1. Captura de Notas (Automática)
-- Detecta Azure IDs (28xxx) y organiza automáticamente
-- Identifica comandos técnicos y los guarda en recursos
-- Genera múltiples templates según el contenido
-- Soporte bilingüe (ES/EN)
-
-### 2. Templates Predefinidos
-- **azure-delivery**: Reporte formal para Azure DevOps
-- **task-tracker**: Seguimiento compacto de tareas
-- **ai-context**: Prompt estructurado para editores IA
-- **daily-standup**: Resumen para daily meetings
-- **bitbucket-pr-standard**: PR completo para features
-- **bitbucket-pr-release**: PR simple para cherry-picks
-- **confluence-release**: Documento de release
-
-### 3. Gestión Inteligente
-- Detecta git tags de deploy y actualiza trackers
-- Genera daily summaries automáticos
-- Búsqueda semántica en todas las notas
-- Categorización automática (bug, feature, refactor, etc.)
-
-## Estructura del Vault
-
-```
-vault/
-├── inbox/           # Brain dump (captura inicial)
-├── entregas/        # Templates Azure terminados
-├── tracking/        # Seguimiento de tareas
-├── daily/           # Daily notes
-├── recursos/        # Comandos, snippets, aprendizajes
-├── proyectos/       # Contextos de IA
-└── templates/       # Templates personalizados
-```
-
-## Configuración
-
-### Archivos de Configuración (XDG)
-
-```
-~/.config/opencode-obsidian/
-├── config.json      # Configuración principal
-
-~/.local/share/opencode-obsidian/
-├── lancedb/         # Índice RAG
-
-opencode-obsidian/mcp-server/
-├── .env.local       # Azure PAT (IMPORTANTE)
-```
-
-### CLI Setup
-
-```bash
-# Configurar con wizard interactivo
-oo-setup setup
-
-# Ver estado actual
-oo-setup status
-
-# Modificar configuración
-oo-setup config --vault "C:/ruta/al/vault"
-```
-
-### Azure PAT (.env.local)
-
-El archivo `.env.local` debe estar en `mcp-server/.env.local`:
-
-```bash
-AZURE_PAT=tu_personal_access_token
-AZURE_ORG=cinemarkintl
-AZURE_PROJECT=Core Backend
-```
+Sistema de gestión de conocimiento que transforma notas en entregables estructurados.
 
 ## Comandos Disponibles
 
-### Comandos Cortos (>oo)
-
-| Comando | Descripción |
+### Estado y Ayuda
+| Comando | Descripcion |
 |---------|-------------|
-| `>oo status` | Ver configuración y estado actual |
+| `>oo status` | Ver configuracion y estado actual |
 | `>oo help` | Mostrar ayuda completa |
-| `>oo cap "texto"` | Capturar nota |
-| `>oo find "query"` | Buscar en vault |
-| `>oo task <id>` | Ver/actualizar tracker |
-| `>oo read "path"` | Leer nota específica |
-| `>oo daily` | Resumen de ayer |
-| `>oo idx` | Indexar vault para RAG |
-| `>oo ask "pregunta"` | Preguntar al vault (RAG) |
-| `>oo tpl` | Listar templates |
-| `>oo create <tpl> <id>` | Crear desde template |
-| `>oo deploy "git tag..."` | Registrar deploy |
-| `>oo deploys` | Listar deploys |
 
-### Comandos Azure DevOps
-
-| Comando | Descripción |
+### Captura y Notas
+| Comando | Descripcion |
 |---------|-------------|
-| `>oo azure` | Ver mis tareas asignadas |
-| `>oo deliver 28999` | Preparar documento de entrega |
-| `>oo comment 28999` | Publicar comentario y resolver |
-| `>oo subtask 28618` | Crear tarea DEV hija |
-| `>oo hours 28999 4` | Actualizar horas trabajadas |
+| `>oo cap "texto"` | Capturar nota (detecta Azure IDs, comandos, tags) |
+| `>oo find "query"` | Buscar en vault por contenido |
+| `>oo read "path"` | Leer nota especifica |
+| `>oo task <id>` | Ver/actualizar tracker de tarea |
 
-## Workflows Comunes
+### Daily y RAG
+| Comando | Descripcion |
+|---------|-------------|
+| `>oo daily` | Generar resumen para daily standup |
+| `>oo idx` | Indexar vault para busqueda semantica |
+| `>oo ask "pregunta"` | Preguntar al vault usando RAG |
 
-### Workflow 1: Tarea Azure Completa
+### Templates y Deploys
+| Comando | Descripcion |
+|---------|-------------|
+| `>oo tpl` | Listar templates disponibles |
+| `>oo create <tpl> <id>` | Crear documento desde template |
+| `>oo deploy "git tag..."` | Registrar deploy (requiere Azure ID en mensaje) |
+| `>oo deploys` | Listar deploys registrados |
 
+### Azure DevOps
+| Comando | Descripcion |
+|---------|-------------|
+| `>oo azure` | Ver tareas asignadas |
+| `>oo deliver <id>` | Preparar documento de entrega |
+| `>oo comment <id>` | Publicar comentario y resolver tarea |
+| `>oo subtask <parent_id>` | Crear tarea DEV hija |
+| `>oo hours <id> <h>` | Actualizar horas trabajadas |
+
+## Workflows Principales
+
+### Workflow Azure Completo
 ```
-1. >oo azure              → Ver tareas asignadas
-2. >oo deliver 28999      → Preparar documento de entrega
+1. >oo azure              # Ver tareas asignadas
+2. >oo deliver 28999      # Generar documento de entrega
 3. (Editar documento en Obsidian)
-4. >oo comment 28999      → Publicar y resolver
+4. >oo comment 28999      # Publicar y resolver
 ```
 
-### Workflow 2: Capturar Pensamiento
-
+### Captura Rapida
 ```
-Usuario: "Tengo que revisar el bug 28416 en el gateway"
-→ Detecta Azure ID
-→ Guarda en inbox/
-→ Genera tracking/28416.md
+>oo cap "Implementar feature 28999 para exportar reportes"
 ```
+Genera automaticamente:
+- `entregas/28999-*.md` - Template de entrega
+- `tracking/28999.md` - Tracker de tarea
+- `proyectos/28999-context.md` - Contexto para IA
 
-### Workflow 3: Daily Summary
-
+### Daily Standup
 ```
 >oo daily
-→ Busca tareas completadas
-→ Detecta deploys del día anterior
-→ Genera resumen formateado
 ```
+Genera resumen con: completados, en progreso, deploys, bloqueos.
 
-### Workflow 4: Crear Subtarea
-
+### Deploy con Validacion
 ```
->oo subtask 28618
-→ Crea tarea DEV hija
-→ Hereda contexto de HU padre
-→ Asigna automáticamente
+>oo deploy "git tag -a v2.8.3 -m '28416 fix OTP'"
 ```
+Formato requerido: Azure ID en el mensaje del tag.
 
-## Detección Automática
+## Deteccion Automatica
 
-El sistema detecta automáticamente:
+El sistema detecta:
 - **Azure IDs**: `28416`, `28976` (formato 2xxxx)
-- **Versiones**: `v1.62.0`, `v21.5.7`
-- **Repositorios**: `CKC-API-GATEWAY`, `CKC_WEBSITE`
-- **URLs**: PRs, Azure DevOps, wikis
 - **Git tags**: `git tag -a vX.Y.Z -m "mensaje"`
+- **Repositorios**: `CKC-API-GATEWAY`, `CKC_WEBSITE`
+- **Comandos tecnicos**: `docker`, `git`, `npm`, etc.
 
-## Crear Templates Personalizados
+## Estructura del Vault
 
-1. Crear archivo en `vault/templates/mi-template.md`
-2. Frontmatter obligatorio:
-   ```yaml
-   ---
-   name: mi-template
-   description: Descripción del template
-   triggers: ["keyword1", "keyword2"]
-   language: es
-   ---
-   ```
-3. Usar placeholders: `{{variable}}`
-4. Disponible inmediatamente
+Ver [README principal](../README.md#vault-structure) para detalles de carpetas.
 
-## Variables de Template
+## Configuracion
 
-Los templates pueden usar:
-- `{{azure_id}}`, `{{version}}`, `{{tag_version}}`
-- `{{repositorio}}`, `{{rama}}`
-- `{{pr_link}}`, `{{azure_link}}`, `{{wiki_link}}`
-- `{{fecha}}`, `{{fecha_generacion}}`
-- `{{titulo}}`, `{{titulo_corto}}`
+### Archivos
+```
+~/.config/opencode-obsidian/config.json  # Configuracion principal
+~/.local/share/opencode-obsidian/lancedb/ # Indice RAG
+mcp-server/.env.local                     # Azure PAT
+```
+
+### Azure PAT (.env.local)
+```bash
+AZURE_PAT=tu_personal_access_token
+AZURE_ORG=organization
+AZURE_PROJECT=Project Name
+```
+
+### CLI Setup
+```bash
+oo-setup setup    # Wizard de configuracion
+oo-setup status   # Ver estado actual
+```
 
 ## Troubleshooting
 
-### Azure PAT no funciona
+### Comandos no aparecen
+1. Reiniciar opencode
+2. Verificar MCP en `~/.config/opencode/opencode.json`
 
-1. Verificar que `.env.local` existe en `mcp-server/`
-2. Verificar que el PAT no ha expirado
-3. Ejecutar `>oo status` para validar conexión
+### Azure PAT no funciona
+1. Verificar `.env.local` en `mcp-server/`
+2. Verificar que PAT no ha expirado
+3. Verificar que tiene scopes: **Work Items** (Read, write, & manage) y **Project and Team** (Read)
+4. Ejecutar `>oo status` para validar
+
+### Error 401 al obtener tareas
+El PAT necesita permisos de **Work Items: Read, write, & manage**.
+Obtener token en: `https://dev.azure.com/{org}/_usersSettings/tokens`
 
 ### RAG no funciona
-
 1. Ejecutar `>oo idx` para indexar
 2. Verificar que hay notas en el vault
 
-### Comandos no aparecen
+## Templates Personalizados
 
-1. Reiniciar opencode
-2. Verificar configuración en `~/.config/opencode/opencode.json`
+Crear en `vault/templates/mi-template.md`:
+```yaml
+---
+name: mi-template
+description: Descripcion del template
+triggers: ["keyword1", "keyword2"]
+language: es
+---
+```
 
-## Referencias
-
-- [Guía de Templates](references/templates-guide.md)
-- [Estructura del Vault](references/vault-structure.md)
+Usar placeholders: `{{azure_id}}`, `{{version}}`, `{{fecha}}`, etc.

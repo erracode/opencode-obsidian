@@ -1,16 +1,18 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
+import { execSync } from 'child_process';
 import { loadConfig, saveConfig, AppConfig } from '../../core/config.js';
 import { detectVaults } from '../vault-detector.js';
 import { validateAzurePAT } from '../azure-validator.js';
 import { prompt, promptYesNo, promptSelect, closePrompt } from '../prompts.js';
 
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
+
 async function findTemplatesSource(): Promise<string | null> {
   const possiblePaths = [
-    path.resolve(process.cwd(), 'skill-opencode-obsidian', 'templates'),
-    path.resolve(process.cwd(), '..', 'skill-opencode-obsidian', 'templates'),
-    path.resolve(__dirname, '..', '..', '..', '..', 'skill-opencode-obsidian', 'templates'),
+    path.resolve(PROJECT_ROOT, 'skill-opencode-obsidian', 'templates'),
+    path.resolve(PROJECT_ROOT, '..', 'skill-opencode-obsidian', 'templates'),
   ];
   
   for (const p of possiblePaths) {
@@ -36,6 +38,7 @@ async function copyTemplates(vaultPath: string): Promise<number> {
   let copied = 0;
   
   try {
+    await fs.mkdir(templatesDest, { recursive: true });
     const files = await fs.readdir(templatesSource);
     
     for (const file of files) {
@@ -88,28 +91,190 @@ async function ensureVaultStructure(vaultPath: string): Promise<void> {
   }
 }
 
+async function checkPrerequisites(): Promise<{ ok: boolean; issues: string[] }> {
+  const issues: string[] = [];
+  
+  console.log('🔍 Verificando prerequisites...');
+  
+  // Check Node.js
+  try {
+    execSync('node --version', { stdio: 'pipe' });
+    console.log('   ✅ Node.js');
+  } catch {
+    issues.push('Node.js no está instalado');
+  }
+  
+  // Check if dependencies installed
+  const nodeModulesPath = path.join(PROJECT_ROOT, 'node_modules');
+  try {
+    await fs.access(nodeModulesPath);
+    console.log('   ✅ node_modules/');
+  } catch {
+    console.log('   ⚠️  node_modules/ no encontrado - ejecuta: npm install');
+    issues.push('dependencies not installed');
+  }
+  
+  // Check if built
+  const distPath = path.join(PROJECT_ROOT, 'dist', 'index.js');
+  try {
+    await fs.access(distPath);
+    console.log('   ✅ dist/');
+  } catch {
+    console.log('   ⚠️  dist/ no encontrado - ejecuta: npm run build');
+    issues.push('not built');
+  }
+  
+  // Check opencode
+  try {
+    execSync('opencode --version', { stdio: 'pipe' });
+    console.log('   ✅ opencode CLI');
+  } catch {
+    console.log('   ⚠️  opencode no instalado - ejecuta: npm install -g opencode');
+    issues.push('opencode not installed');
+  }
+  
+  return { ok: issues.length === 0, issues };
+}
+
+async function installDependencies(): Promise<boolean> {
+  console.log('\n📦 Instalando dependencias...');
+  try {
+    execSync('npm install', { cwd: PROJECT_ROOT, stdio: 'inherit' });
+    console.log('   ✅ npm install completado');
+    return true;
+  } catch {
+    console.log('   ❌ Error en npm install');
+    return false;
+  }
+}
+
+async function buildProject(): Promise<boolean> {
+  console.log('\n🔨 Compilando proyecto...');
+  try {
+    execSync('npm run build', { cwd: PROJECT_ROOT, stdio: 'inherit' });
+    console.log('   ✅ npm run build completado');
+    return true;
+  } catch {
+    console.log('   ❌ Error en npm run build');
+    return false;
+  }
+}
+
+async function configureMCP(): Promise<boolean> {
+  console.log('\n🔗 Configurando MCP en opencode...');
+  
+  const opencodeConfigPath = path.join(os.homedir(), '.config', 'opencode', 'opencode.json');
+  const mcpServerPath = path.join(PROJECT_ROOT, 'dist', 'index.js');
+  
+  try {
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(opencodeConfigPath), { recursive: true });
+    
+    let config: any = {};
+    try {
+      const content = await fs.readFile(opencodeConfigPath, 'utf-8');
+      config = JSON.parse(content);
+    } catch {
+      // File doesn't exist, use empty config
+    }
+    
+    if (!config.mcp) {
+      config.mcp = {};
+    }
+    
+    // Add or update opencode-obsidian MCP
+    config.mcp['opencode-obsidian'] = {
+      type: 'local',
+      command: ['node', mcpServerPath],
+      enabled: true
+    };
+    
+    await fs.writeFile(opencodeConfigPath, JSON.stringify(config, null, 2));
+    console.log('   ✅ MCP configurado en ~/.config/opencode/opencode.json');
+    return true;
+  } catch (error: any) {
+    console.log(`   ❌ Error configurando MCP: ${error.message}`);
+    return false;
+  }
+}
+
+async function installOpencodeCLI(): Promise<boolean> {
+  console.log('\n📥 Instalando opencode CLI...');
+  try {
+    execSync('npm install -g opencode', { stdio: 'inherit' });
+    console.log('   ✅ opencode instalado');
+    return true;
+  } catch {
+    console.log('   ❌ Error instalando opencode');
+    return false;
+  }
+}
+
 export async function setupCommand(): Promise<void> {
   console.log('🚀 oo-setup - Configuración de opencode-obsidian');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');
   
+  // Check prerequisites
+  const { ok: prereqsOk, issues } = await checkPrerequisites();
+  
+  if (!prereqsOk) {
+    console.log('\n⚠️  Prerequisites incompletos');
+    
+    // Ask to fix issues
+    const fixIssues = await promptYesNo('¿Deseas intentar solucionar los problemas automáticamente?', true);
+    
+    if (fixIssues) {
+      if (issues.includes('opencode not installed')) {
+        const installed = await installOpencodeCLI();
+        if (!installed) {
+          console.log('\n❌ No se pudo instalar opencode. Instala manualmente: npm install -g opencode');
+        }
+      }
+      
+      if (issues.includes('dependencies not installed')) {
+        const installed = await installDependencies();
+        if (!installed) {
+          console.log('\n❌ Error instalando dependencias. Ejecuta manualmente: npm install');
+        }
+      }
+      
+      if (issues.includes('not built')) {
+        const built = await buildProject();
+        if (!built) {
+          console.log('\n❌ Error compilando. Ejecuta manualmente: npm run build');
+        }
+      }
+    }
+  }
+  
+  // Ask about MCP configuration
+  console.log('');
+  const configureMcp = await promptYesNo('¿Configurar MCP en opencode.json?', true);
+  
+  if (configureMcp) {
+    await configureMCP();
+  }
+  
+  // Load existing config
   const existingConfig = await loadConfig();
   
   if (existingConfig) {
-    console.log('📁 Configuración existente encontrada:');
+    console.log('\n📁 Configuración existente encontrada:');
     console.log(`   Vault: ${existingConfig.vault.path}`);
     console.log(`   Azure: ${existingConfig.azure.organization}/${existingConfig.azure.project}`);
     console.log('');
     
-    const reconfigure = await promptYesNo('¿Deseas reconfigurar?', false);
+    const reconfigure = await promptYesNo('¿Deseas reconfigurar vault/Azure?', false);
     if (!reconfigure) {
       console.log('\n✅ Configuración mantenida.');
+      showFinalInstructions();
       closePrompt();
       return;
     }
   }
   
-  console.log('🔍 Buscando vaults de Obsidian...');
+  console.log('\n🔍 Buscando vaults de Obsidian...');
   const detectedVaults = await detectVaults();
   
   let selectedVaultPath: string;
@@ -195,7 +360,7 @@ export async function setupCommand(): Promise<void> {
     } else {
       console.log('\n⚠️  No hay PAT configurado');
       console.log('   Agrega AZURE_PAT a .env.local');
-      console.log(`   Ubicación: ${path.join(process.cwd(), '.env.local')}`);
+      console.log(`   Ubicación: ${path.join(PROJECT_ROOT, '.env.local')}`);
     }
   }
   
@@ -210,19 +375,20 @@ export async function setupCommand(): Promise<void> {
   
   await saveConfig(newConfig);
   
+  showFinalInstructions();
+  
+  closePrompt();
+}
+
+function showFinalInstructions(): void {
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📝 Resumen de configuración');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`📁 Vault: ${selectedVaultPath}`);
-  console.log(`🔗 Azure: ${azureConfig.organization}/${azureConfig.project}`);
-  console.log(`📄 Config: ~/.config/opencode-obsidian/config.json`);
+  console.log('✅ ¡Setup completado!');
   console.log('');
-  console.log('🎉 ¡Setup completado!');
-  console.log('');
-  console.log('Próximos pasos:');
-  console.log('  1. Reinicia opencode');
+  console.log('📋 Próximos pasos:');
+  console.log('  1. Reinicia opencode completamente');
   console.log('  2. Ejecuta: >oo status');
   console.log('  3. Empieza con: >oo cap "tu primera nota"');
-  
-  closePrompt();
+  console.log('');
 }
