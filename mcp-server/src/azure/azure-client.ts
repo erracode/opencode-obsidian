@@ -240,27 +240,39 @@ export class AzureDevOpsClient {
   }
 
   /**
-   * Agregar comentario a un work item
+   * Agregar comentario a un work item con soporte Markdown
    */
   async addComment(workItemId: number, comment: string): Promise<void> {
     return this.requestWithRateLimit(async () => {
-      const patchDocument = [
-        {
-          op: 'add',
-          path: '/fields/System.History',
-          value: comment
-        }
-      ];
-
-      await this.client.patch(
-        `/${this.project}/_apis/wit/workitems/${workItemId}?api-version=${this.apiVersion}`,
-        patchDocument,
-        {
-          headers: {
-            'Content-Type': 'application/json-patch+json'
+      // Probar endpoint de comentarios con markdown primero
+      try {
+        await this.client.post(
+          `/${this.project}/_apis/wit/workitems/${workItemId}/comments?api-version=7.0`,
+          { text: comment },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+      } catch (primaryError: any) {
+        // Si falla, usar método legacy
+        console.log('Comment endpoint failed, using legacy:', primaryError.message);
+        
+        const patchDocument = [
+          {
+            op: 'add',
+            path: '/fields/System.History',
+            value: comment
           }
-        }
-      );
+        ];
+
+        await this.client.patch(
+          `/${this.project}/_apis/wit/workitems/${workItemId}?api-version=${this.apiVersion}`,
+          patchDocument,
+          {
+            headers: {
+              'Content-Type': 'application/json-patch+json'
+            }
+          }
+        );
+      }
     });
   }
 

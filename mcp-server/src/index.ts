@@ -894,11 +894,15 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
         },
         {
           name: '>oo_comment',
-          description: 'Comment - Publish delivery comment to Azure and mark as Resolved',
+          description: 'Comment - Publish delivery comment to Azure and change state',
           inputSchema: {
             type: 'object',
             properties: {
-              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28999)' }
+              azure_id: { type: 'number', description: 'Azure work item ID (e.g., 28999)' },
+              pr_link: { type: 'string', description: 'Optional: Pull Request link' },
+              deploy_url: { type: 'string', description: 'Optional: Deploy/Preview URL' },
+              notes: { type: 'string', description: 'Optional: Additional notes' },
+              state: { type: 'string', description: 'Optional: Target state (Testing, Done, Resolved, Closed)' }
             },
             required: ['azure_id']
           }
@@ -1407,7 +1411,13 @@ async function updateTaskProgress(azureId: string, updates: { status?: string; t
             await initializeVault(vp);
           }
           const azureId = Number(args?.azure_id);
-          const result = await handleAzurePublishComment(azureId, vp, vaultManager!);
+          const extraParams = {
+            prLink: args?.pr_link as string || '',
+            deployUrl: args?.deploy_url as string || '',
+            notes: args?.notes as string || '',
+            state: args?.state as string || ''
+          };
+          const result = await handleAzurePublishComment(azureId, vp, vaultManager!, extraParams);
           return {
             content: [{ type: 'text', text: result }]
           };

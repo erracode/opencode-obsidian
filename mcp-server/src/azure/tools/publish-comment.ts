@@ -1,4 +1,5 @@
 import { getAzureClient } from '../azure-client';
+import { marked } from 'marked';
 
 interface VaultManager {
   readNote(notePath: string): Promise<{ content: string; data: any }>;
@@ -7,51 +8,110 @@ interface VaultManager {
   listNotes(): Promise<string[]>;
 }
 
+interface ExtraCommentParams {
+  prLink?: string;
+  deployUrl?: string;
+  notes?: string;
+  state?: string;
+}
+
 /**
  * Tool: azure_publish_comment
  * Comando: >oo comment [id]
- * Publica un comentario de entrega en Azure DevOps y cambia el estado a Resolved
+ * Publica un comentario de entrega en Azure DevOps y cambia el estado
  */
 export async function handleAzurePublishComment(
   azureId: number,
   vaultPath: string,
-  vaultManager: VaultManager
+  vaultManager: VaultManager,
+  extraParams?: ExtraCommentParams
 ): Promise<string> {
   try {
     const azureClient = getAzureClient();
     // 1. Buscar archivo de entrega en vault/entregas/
     const deliveryFiles = await vaultManager.listNotes();
-    const matchingFile = deliveryFiles.find(f => 
-      f.startsWith('entregas/') && f.includes(`${azureId}-`)
+    const azureIdStr = azureId.toString();
+    
+    // Normalizar paths para兼容 Windows y Linux
+    const normalizedFiles = deliveryFiles.map(f => f.replace(/\\/g, '/'));
+    
+    const normalizedMatching = normalizedFiles.find(f => 
+      f.startsWith('entregas/') && f.includes(`${azureIdStr}-`)
     );
+    
+    // Encontrar el path original (no normalizado) para leer el archivo
+    const matchingFile = normalizedMatching 
+      ? deliveryFiles[normalizedFiles.indexOf(normalizedMatching)]
+      : undefined;
 
     if (!matchingFile) {
+      // Buscar con cualquier coincidencia parcial
+      const entregaFiles = deliveryFiles.filter(f => 
+        f.toLowerCase().includes('entregas') && f.toLowerCase().includes(azureIdStr.toLowerCase())
+      );
+      
+      let debugInfo = `Archivos en vault que coinciden con '${azureIdStr}': ${entregaFiles.length > 0 ? entregaFiles.join('; ') : 'ninguno'}\n`;
+      debugInfo += `Total archivos: ${deliveryFiles.length}\n`;
+      debugInfo += deliveryFiles.slice(0, 5).map(f => `Sample: ${f}`).join('\n');
+      
       return `❌ No se encontró archivo de entrega para #${azureId}.\n` +
+             debugInfo +
              `Usa primero: \`>oo review ${azureId}\` para preparar la entrega.`;
     }
 
     // 2. Leer el archivo de entrega
     const deliveryNote = await vaultManager.readNote(matchingFile);
     
-    // 3. Extraer secciones relevantes del contenido
+    // 3. Extraer links del contenido
     const sections = extractSections(deliveryNote.content);
     
-    // 4. Formatear comentario para Azure
-    const comment = formatCommentForAzure(sections, azureId);
+    // 4. Formatear comentario para Azure - usar contenido tal cual del template
+    // Combinar: datos del archivo + parámetros extra del comando
+    const extraData = {
+      prLink: extraParams?.prLink || sections.prLink || deliveryNote.data?.pr_link || '',
+      deployUrl: extraParams?.deployUrl || sections.deployUrl || deliveryNote.data?.deploy_url || '',
+      notes: extraParams?.notes || deliveryNote.data?.notas || ''
+    };
+    const comment = formatCommentForAzure(deliveryNote.content, azureId, extraData);
 
     // 5. Publicar comentario en Azure DevOps
     await azureClient.addComment(azureId, comment);
 
-    // 6. Cambiar estado a Resolved
-    await azureClient.updateWorkItemState(azureId, 'Resolved');
+    // 6. Cambiar estado según el tipo de work item o parámetro explícito
+    let targetState: string;
+    
+    if (extraParams?.state) {
+      // Si se pasó estado explícitamente, usarlo
+      targetState = extraParams.state;
+    } else {
+      // Por defecto: Bugs -> Testing, Tasks -> Done
+      const workItem = await azureClient.getWorkItem(azureId);
+      const workItemType = workItem.fields['System.WorkItemType'];
+      targetState = workItemType === 'Bug' ? 'Testing' : 'Done';
+    }
+    
+    try {
+      await azureClient.updateWorkItemState(azureId, targetState);
+    } catch (stateError: any) {
+      // Si falla, intentar con estado alternativo
+      try {
+        const altState = targetState === 'Testing' ? 'Done' : 'Closed';
+        await azureClient.updateWorkItemState(azureId, altState);
+        targetState = altState;
+      } catch {
+        console.log('No se pudo cambiar el estado');
+      }
+    }
 
     // 7. Crear/actualizar nota de tracking
     const trackingPath = `tracking/${azureId}.md`;
     const trackingContent = `#${azureId} - Entregado\n\n` +
       `**Fecha de entrega:** ${new Date().toLocaleDateString('es-ES')}\n` +
-      `**Estado:** Resolved\n` +
-      `**Archivo de entrega:** ${matchingFile}\n\n` +
-      `---\n` +
+      `**Estado:** ${targetState}\n` +
+      `**Archivo de entrega:** ${matchingFile}\n` +
+      (extraData.prLink ? `**PR:** ${extraData.prLink}\n` : '') +
+      (extraData.deployUrl ? `**Deploy:** ${extraData.deployUrl}\n` : '') +
+      `\n---\n` +
       `*Entregado automáticamente via OpenCode*`;
 
     await vaultManager.writeNote(
@@ -68,13 +128,15 @@ export async function handleAzurePublishComment(
     // 8. Retornar confirmación
     let output = `✅ **Comentario publicado en #${azureId}**\n\n`;
     output += `📄 **Archivo de entrega:** ${matchingFile}\n`;
-    output += `📝 **Estado cambiado a:** Resolved\n\n`;
+    output += `📝 **Estado cambiado a:** ${targetState}\n\n`;
     output += `🔗 **Ver en Azure DevOps:**\n`;
     output += `https://dev.azure.com/cinemarkintl/Core%20Backend/_workitems/edit/${azureId}\n\n`;
     output += `📋 **Resumen del comentario:**\n`;
     output += `- Contexto: ${sections.contexto ? '✅ Incluido' : '❌ No encontrado'}\n`;
     output += `- Implementación: ${sections.implementacion ? '✅ Incluido' : '❌ No encontrado'}\n`;
     output += `- Testing: ${sections.testing ? '✅ Incluido' : '❌ No encontrado'}\n`;
+    if (extraData.prLink) output += `- PR: ${extraData.prLink}\n`;
+    if (extraData.deployUrl) output += `- Deploy: ${extraData.deployUrl}\n`;
 
     return output;
 
@@ -97,12 +159,16 @@ function extractSections(content: string): {
   implementacion: string;
   testing: string;
   notas: string;
+  prLink: string;
+  deployUrl: string;
 } {
   const sections = {
     contexto: '',
     implementacion: '',
     testing: '',
-    notas: ''
+    notas: '',
+    prLink: '',
+    deployUrl: ''
   };
 
   // Buscar sección de Contexto y Objetivo
@@ -129,6 +195,24 @@ function extractSections(content: string): {
     sections.notas = cleanSection(notasMatch[0]);
   }
 
+  // Extraer PR link desde el cuerpo del markdown
+  const prMatch = content.match(/\*\*PR:?\*\*.*?(https?:\/\/[^\s\n]+)/i);
+  if (prMatch) sections.prLink = prMatch[1];
+  
+  // Extraer Deploy link desde el cuerpo del markdown
+  const deployMatch = content.match(/\*\*Deploy:\*\*.*?(https?:\/\/[^\s\n]+)/i);
+  if (deployMatch) sections.deployUrl = deployMatch[1];
+  
+  // También buscar en frontmatter
+  const frontmatterMatch = content.match(/^---([\s\S]*?)---/);
+  if (frontmatterMatch) {
+    const fm = frontmatterMatch[1];
+    const fmPrMatch = fm.match(/pr_link:\s*(.+)/i);
+    const fmDeployMatch = fm.match(/deploy_url:\s*(.+)/i);
+    if (fmPrMatch && !sections.prLink) sections.prLink = fmPrMatch[1].trim();
+    if (fmDeployMatch && !sections.deployUrl) sections.deployUrl = fmDeployMatch[1].trim();
+  }
+
   return sections;
 }
 
@@ -145,47 +229,30 @@ function cleanSection(section: string): string {
 }
 
 /**
- * Formatear comentario para Azure DevOps
+ * Formatear comentario para Azure DevOps - convierte markdown a HTML
  */
 function formatCommentForAzure(
-  sections: ReturnType<typeof extractSections>,
-  azureId: number
+  content: string,
+  azureId: number,
+  extraData?: { prLink?: string; deployUrl?: string; notes?: string }
 ): string {
-  let comment = `## 🎉 Entrega de Desarrollo\n\n`;
+  // Limpiar el contenido del frontmatter
+  let cleanContent = content.replace(/^---[\s\S]*?---/, '').trim();
   
-  comment += `### Resumen\n`;
-  comment += `Tarea #${azureId} completada y lista para revisión.\n\n`;
-
-  if (sections.contexto) {
-    comment += `### Contexto y Objetivo\n`;
-    comment += sections.contexto.substring(0, 500); // Limitar a 500 chars
-    if (sections.contexto.length > 500) {
-      comment += '...';
-    }
-    comment += '\n\n';
+  // Agregar links adicionales al final si existen
+  let additionalLinks = '';
+  if (extraData?.prLink || extraData?.deployUrl || extraData?.notes) {
+    additionalLinks += `---\n`;
+    additionalLinks += `### 🔗 Links de Entrega\n`;
+    if (extraData.prLink) additionalLinks += `- **PR:** ${extraData.prLink}\n`;
+    if (extraData.deployUrl) additionalLinks += `- **Deploy:** ${extraData.deployUrl}\n`;
+    if (extraData.notes) additionalLinks += `- **Notas:** ${extraData.notes}\n`;
   }
 
-  if (sections.implementacion) {
-    comment += `### Implementación\n`;
-    comment += sections.implementacion.substring(0, 800);
-    if (sections.implementacion.length > 800) {
-      comment += '...';
-    }
-    comment += '\n\n';
-  }
-
-  if (sections.testing) {
-    comment += `### Testing y Validación\n`;
-    comment += sections.testing.substring(0, 600);
-    if (sections.testing.length > 600) {
-      comment += '...';
-    }
-    comment += '\n\n';
-  }
-
-  comment += `---\n`;
-  comment += `🤖 *Entregado automáticamente via OpenCode Integration*\n`;
-  comment += `📅 ${new Date().toLocaleDateString('es-ES')}`;
-
-  return comment;
+  const markdownContent = cleanContent + '\n\n' + additionalLinks;
+  
+  // Convertir markdown a HTML
+  const htmlContent = marked.parse(markdownContent, { async: false }) as string;
+  
+  return htmlContent;
 }
