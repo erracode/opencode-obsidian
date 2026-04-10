@@ -1,11 +1,11 @@
 ---
 name: azure-delivery
-description: Reporte formal de tarea para Azure DevOps
-triggers: ["azure", "entrega", "delivery", "tarea", "task"]
+description: Reporte formal de entrega Azure DevOps con estructura completa
+triggers: ["azure", "entrega", "delivery", "tarea", "task", "release"]
 language: es
 ---
 
-# 🎉 [Tipo: {{tipo}}] - {{titulo}}
+# 🎉 [Tipo: FEATURE / BUGFIX / REFACTOR] - {{titulo}}
 
 ---
 
@@ -61,19 +61,19 @@ language: es
 ## 6. Documentación y Release 🚀
 
 ### Estatus de Despliegue (Control de Entregas)
-* [ ] **Desarrollo/Laboratorio (LAB):** {{estado_lab}}
-* [ ] **Staging/QA:** {{estado_stg}}
-* [ ] **Producción (PROD):** {{estado_prod}}
+* [ ] **Desarrollo/Laboratorio (LAB):** ✅ Listo para QA / ❌ Pendiente
+* [ ] **Staging/QA:** ✅ Aprobado / ❌ En Prueba
+* [ ] **Producción (PROD):** ✅ Desplegado / ❌ Pendiente
 
 ### Trazabilidad del Release
-* **Versión de Release (Tag):** {{tag_version}}
+* **Versión de Release (Tag):** `{{version}}`
 * **Fecha Estimada de Prod:** {{fecha_prod}}
 * **Link/Tag del Deploy:** {{deploy_tag}}
 
 ### Alcance y Notas
 * **Wiki de Feature:** {{wiki_link}}
-* **Criticidad:** {{criticidad}}
-* **Backward Compatible:** {{backward_compatible}}
+* **Criticidad:** 🟡 Media / 🟢 Low / 🔴 High
+* **Backward Compatible:** ✅ Yes / ❌ No
 * **Notas Adicionales:** {{notas}}
 
 ---

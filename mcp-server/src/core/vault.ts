@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import matter from 'gray-matter';
+import { PathResolver } from './workspace.js';
 
 export interface NoteMetadata {
   [key: string]: any;
@@ -14,9 +15,11 @@ export interface Note {
 
 export class VaultManager {
   private vaultPath: string;
+  private resolver: PathResolver;
 
-  constructor(vaultPath: string) {
+  constructor(vaultPath: string, workspaceName: string) {
     this.vaultPath = vaultPath;
+    this.resolver = new PathResolver(path.join(vaultPath, 'workspaces', workspaceName));
   }
 
   /**
@@ -178,19 +181,13 @@ export class VaultManager {
   }
 
   /**
-   * Obtiene o crea el daily note del día
-   */
-  async getDailyNote(date?: Date): Promise<{ path: string; content: string; data: NoteMetadata }> {
+    * Obtiene o crea el daily note del día
+    */
+   async getDailyNote(date?: Date): Promise<{ path: string; content: string; data: NoteMetadata }> {
     const targetDate = date || new Date();
     const dateStr = targetDate.toISOString().split('T')[0];
     
-    // Buscar si existe carpeta Daily Notes
-    const dailyFolderPath = path.join(this.vaultPath, 'daily');
-    const dailyNotesFolderExists = await fs.stat(dailyFolderPath).catch(() => null);
-    
-    const folder = dailyNotesFolderExists ? 'daily' : '';
-    const fileName = `${dateStr}.md`;
-    const relativePath = folder ? path.join(folder, fileName) : fileName;
+    const relativePath = this.resolver.daily(dateStr);
     const fullPath = path.join(this.vaultPath, relativePath);
     
     try {
@@ -212,6 +209,36 @@ export class VaultManager {
   }
 
   /**
+    * Crea un tracker para una tarea Azure
+    */
+   async createTracker(azureId: string, content: string, metadata?: NoteMetadata): Promise<string> {
+    const trackerPath = this.resolver.tracking(azureId);
+    const fullPath = path.join(this.vaultPath, trackerPath);
+    
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await this.writeNote(trackerPath, content, {
+      azure_id: azureId,
+      created_at: new Date().toISOString(),
+      ...metadata
+    });
+    
+    return trackerPath;
+  }
+
+  /**
+    * Actualiza el tracker de una tarea
+    */
+   async updateTracker(azureId: string, updates: { content?: string; metadata?: NoteMetadata }): Promise<void> {
+    const trackerPath = this.resolver.tracking(azureId);
+    const note = await this.readNote(trackerPath);
+    
+    const newContent = updates.content !== undefined ? updates.content : note.content;
+    const newData = updates.metadata ? { ...note.data, ...updates.metadata } : note.data;
+    
+    await this.writeNote(trackerPath, newContent, newData);
+  }
+
+  /**
    * Verifica si existe una nota
    */
   async exists(relativePath: string): Promise<boolean> {
@@ -228,5 +255,12 @@ export class VaultManager {
    */
   getVaultPath(): string {
     return this.vaultPath;
+  }
+
+  /**
+   * Obtiene el resolver de paths
+   */
+  getPathResolver(): PathResolver {
+    return this.resolver;
   }
 }
