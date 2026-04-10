@@ -51,30 +51,20 @@ export async function statusCommand(): Promise<void> {
     console.log('   ⚠️  No accesible');
   }
   
-  // Azure
-  console.log('\n🔗 Azure DevOps');
-  console.log(`   Organización: ${config.azure.organization}`);
-  console.log(`   Proyecto: ${config.azure.project}`);
-  
-  const pat = process.env.AZURE_PAT;
-  if (pat) {
-    console.log(`   PAT: ****${pat.slice(-4)}`);
-    
-    const validation = await validateAzurePAT(pat, config.azure.organization, config.azure.project);
-    if (validation.valid) {
-      if (validation.hasWorkItemsAccess) {
-        console.log('   Estado: ✅ Válido (con acceso a Work Items)');
-      } else {
-        console.log('   Estado: ⚠️ Válido pero sin acceso a Work Items');
-        console.log('   El PAT necesita scope "Work Items (Read & Write)"');
-      }
-    } else {
-      console.log(`   Estado: ❌ ${validation.error}`);
-    }
-  } else {
-    console.log('   PAT: ⚠️  No configurado');
-    console.log('   Crea .env.local con AZURE_PAT');
-  }
+// Azure
+   console.log('\n🔗 Azure DevOps');
+   if (config.workspaces.some(w => w.azure)) {
+     config.workspaces.forEach(ws => {
+       if (ws.azure) {
+         console.log(`   ${ws.name}: ${ws.azure.organization}/${ws.azure.project}`);
+         if (ws.azure.patLast4) {
+           console.log(`   PAT: ****${ws.azure.patLast4}`);
+         }
+       }
+     });
+   } else {
+     console.log('   No configurado en ningún workspace');
+   }
   
   // Templates
   console.log('\n📚 Templates');

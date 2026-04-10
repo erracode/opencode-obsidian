@@ -36,13 +36,23 @@ export async function configCommand(args: string[]): Promise<void> {
   }
   
   if (parsedArgs.org) {
-    config.azure.organization = parsedArgs.org;
-    console.log(`🔗 Organización actualizada: ${parsedArgs.org}`);
+    const ws = parsedArgs.workspace || config.workspaces[0]?.name || 'sundevs';
+    const workspace = config.workspaces.find(w => w.name === ws);
+    if (workspace) {
+      workspace.azure = workspace.azure || { organization: '', project: '' };
+      workspace.azure.organization = parsedArgs.org;
+      console.log(`🔗 Organización actualizada en ${ws}: ${parsedArgs.org}`);
+    }
   }
   
   if (parsedArgs.project) {
-    config.azure.project = parsedArgs.project;
-    console.log(`🔗 Proyecto actualizado: ${parsedArgs.project}`);
+    const ws = parsedArgs.workspace || config.workspaces[0]?.name || 'sundevs';
+    const workspace = config.workspaces.find(w => w.name === ws);
+    if (workspace) {
+      workspace.azure = workspace.azure || { organization: '', project: '' };
+      workspace.azure.project = parsedArgs.project;
+      console.log(`🔗 Proyecto actualizado en ${ws}: ${parsedArgs.project}`);
+    }
   }
   
   if (!parsedArgs.vault && !parsedArgs.org && !parsedArgs.project) {
@@ -57,12 +67,12 @@ Opciones:
 Ejemplos:
   oo-setup config --vault "C:/Users/Jesus/Documents/Obsidian Vault"
   oo-setup config --org mi-organizacion
-  oo-setup config --project "Mi Proyecto"
+oo-setup config --project "Mi Proyecto"
 
 Configuración actual:
-  Vault: ${config.vault.path}
-  Azure: ${config.azure.organization}/${config.azure.project}
-`);
+   Vault: ${config.vault.path}
+   Workspaces: ${config.workspaces.map(w => w.name).join(', ')}
+  `);
     closePrompt();
     return;
   }
